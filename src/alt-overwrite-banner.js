@@ -20,7 +20,7 @@ import alt from 'alt-server'
           baseObjects.add(this)
           // alt.log('created baseobject:', baseObjectChild.name)
         } catch (error) {
-          alt.logError(`failed create ${baseObjectChild.name} error:`)
+          alt.logError(`failed create alt.${baseObjectChild.name} error:`)
           throw error
         }
       }
@@ -31,7 +31,7 @@ import alt from 'alt-server'
           super.destroy()
           // alt.log('destroyed baseobject:', baseObjectChild.name)
         } catch (error) {
-          alt.logError(`failed destroy ${baseObjectChild.name} error:`)
+          alt.logError(`failed destroy alt.${baseObjectChild.name} error:`)
           throw error
         }
       }
