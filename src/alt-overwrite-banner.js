@@ -13,16 +13,25 @@ import alt from 'alt-server'
     )) continue
 
     alt[key] = class extends baseObjectChild {
+      // eslint-disable-next-line constructor-super
       constructor (...args) {
-        super(...args)
-        baseObjects.add(this)
-        // alt.log('created baseobject:', baseObjectChild.name)
+        try {
+          super(...args)
+          baseObjects.add(this)
+          // alt.log('created baseobject:', baseObjectChild.name)
+        } catch (e) {
+          alt.logError(`failed create ${baseObjectChild.name} error:`, e.stack)
+        }
       }
 
       destroy () {
-        baseObjects.delete(this)
-        // alt.log('destroyed baseobject:', baseObjectChild.name)
-        super.destroy()
+        try {
+          baseObjects.delete(this)
+          super.destroy()
+          // alt.log('destroyed baseobject:', baseObjectChild.name)
+        } catch (e) {
+          alt.logError(`failed destroy ${baseObjectChild.name} error:`, e.stack)
+        }
       }
     }
   }
