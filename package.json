@@ -1,0 +1,25 @@
+{
+  "name": "esbuild-plugin-altv-dev-server",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "files": [
+    "src/index.d.ts",
+    "src/alt-overwrite-banner.js"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "esbuild": "0.x"
+  },
+  "devDependencies": {
+    "@altv/types-server": "^2.0.6",
+    "@altv/types-shared": "^1.0.7",
+    "babel-eslint": "^10.1.0",
+    "esbuild": "^0.13.8",
+    "eslint": "^7.22.0",
+    "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1"
+  },
+  "type": "module"
+}
