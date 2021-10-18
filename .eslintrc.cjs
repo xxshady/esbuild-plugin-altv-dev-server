@@ -26,5 +26,8 @@ module.exports = {
     }],
     'eol-last': 0,
   },
-  ignorePatterns: ['*.d.ts'],
+  ignorePatterns: [
+    '*.d.ts',
+    'example-altv-resource',
+  ],
 }
