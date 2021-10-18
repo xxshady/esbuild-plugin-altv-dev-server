@@ -1,6 +1,6 @@
 # esbuild-plugin-altv-dev-server
 
-[esbuild](https://esbuild.github.io/) plugin for extremely fast serverside development using JS/TS on alt:V.
+[esbuild](https://esbuild.github.io/) plugin for extremely fast serverside development using JS/TS on [alt:V](https://altv.mp).
 
 This plugin imports `alt-server` once at the top of the bundle and replaces all your `alt-server` imports with its common variable.
 The "dev" in the name means that this plugin is intended only for developing a server script. It allows you to use the server restart command
