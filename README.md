@@ -3,9 +3,13 @@
 [esbuild](https://esbuild.github.io/) plugin for extremely fast serverside development using JS/TS on [alt:V](https://altv.mp).
 
 This plugin imports `alt-server` once at the top of the bundle and replaces all your `alt-server` imports with its common variable.
-The "dev" in the name means that this plugin is intended only for developing a server script. It allows you to use the server restart command
-on your resource without the need for a complete restart of the server, as well as a reconnect on the client, 
-because internally all the created alt:V entities (baseobjects) are automatically deleted on "resourceStop" of your script resource
+
+The "dev" in the name means that this plugin is intended only for developing a server script. 
+
+This tool allows you to use the server restart command on your resource 
+without the need for a complete restart of the server, as well as a reconnect on the client, 
+because internally all the created alt:V entities (baseobjects) and other data of server players are automatically deleted
+on "resourceStop" event of your script resource
 
 ### Installation
 
