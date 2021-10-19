@@ -1,45 +1,33 @@
 import alt from 'alt-server'
 
 (() => {
-  const BaseObject = alt.BaseObject
-  const Player = alt.Player
+  const {
+    BaseObject,
+    WorldObject,
+    Entity,
+    Blip,
+    Colshape,
+    Player,
+  } = alt
   const baseObjects = new Set()
 
   const clearPlayersMeta = overwritePlayerMetaMethods(Player)
 
   for (const key in alt) {
-    const baseObjectChild = alt[key]
+    const baseObjectClass = alt[key]
+    const proto = baseObjectClass.prototype
 
     if (!(
-      baseObjectChild !== BaseObject &&
-      baseObjectChild !== Player &&
-      baseObjectChild.prototype instanceof BaseObject
+      proto instanceof BaseObject &&
+      baseObjectClass !== BaseObject &&
+      baseObjectClass !== WorldObject &&
+      baseObjectClass !== Entity &&
+      baseObjectClass !== Blip &&
+      baseObjectClass !== Colshape &&
+      baseObjectClass !== Player
     )) continue
 
-    alt[key] = class extends baseObjectChild {
-      // eslint-disable-next-line constructor-super
-      constructor (...args) {
-        try {
-          super(...args)
-          baseObjects.add(this)
-          // alt.log('created baseobject:', baseObjectChild.name)
-        } catch (error) {
-          alt.logError(`failed create alt.${baseObjectChild.name} error:`)
-          throw error
-        }
-      }
-
-      destroy () {
-        try {
-          baseObjects.delete(this)
-          super.destroy()
-          // alt.log('destroyed baseobject:', baseObjectChild.name)
-        } catch (error) {
-          alt.logError(`failed destroy alt.${baseObjectChild.name} error:`)
-          throw error
-        }
-      }
-    }
+    alt[key] = wrapBaseObjectChildClass(baseObjectClass)
   }
 
   alt.on('resourceStop', () => {
@@ -97,5 +85,52 @@ import alt from 'alt-server'
         }
       }
     }
+  }
+
+  function wrapBaseObjectChildClass (BaseObjectChild) {
+    const proto = BaseObjectChild.prototype
+    const originalDestroy = Symbol('originalDestroy')
+
+    proto[originalDestroy] = proto.destroy
+
+    proto.destroy = function () {
+      try {
+        baseObjects.delete(this)
+        this[originalDestroy]()
+        // alt.log('destroyed baseobject:', BaseObjectChild.name)
+      } catch (error) {
+        alt.logError(`failed destroy alt.${BaseObjectChild.name} error:`)
+        throw error
+      }
+    }
+
+    const WrappedBaseObjectChild = function (...args) {
+      try {
+        const baseObject = new BaseObjectChild(...args)
+
+        baseObjects.add(baseObject)
+        baseObject.__proto__ = WrappedBaseObjectChild.prototype
+
+        return baseObject
+        // alt.log('created baseobject:', BaseObjectChild.name)
+      } catch (error) {
+        alt.logError(`failed create alt.${BaseObjectChild.name} error:`)
+        throw error
+      }
+    }
+
+    for (const key in BaseObjectChild) {
+      WrappedBaseObjectChild[key] = BaseObjectChild[key]
+    }
+
+    WrappedBaseObjectChild.prototype = proto
+
+    Object.defineProperty(
+      WrappedBaseObjectChild,
+      'name', {
+        value: BaseObjectChild.name,
+      })
+
+    return WrappedBaseObjectChild
   }
 })()

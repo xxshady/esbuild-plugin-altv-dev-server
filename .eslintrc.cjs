@@ -25,6 +25,7 @@ module.exports = {
       functions: 'always-multiline',
     }],
     'eol-last': 0,
+    'no-proto': 0,
   },
   ignorePatterns: [
     '*.d.ts',
