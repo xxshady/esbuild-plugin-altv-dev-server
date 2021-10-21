@@ -109,7 +109,8 @@ import alt from 'alt-server'
         const baseObject = new BaseObjectChild(...args)
 
         baseObjects.add(baseObject)
-        baseObject.__proto__ = WrappedBaseObjectChild.prototype
+        // fix prototype in inherited from BaseObjectChild classes
+        baseObject.__proto__ = this.__proto__
 
         return baseObject
         // alt.log('created baseobject:', BaseObjectChild.name)
