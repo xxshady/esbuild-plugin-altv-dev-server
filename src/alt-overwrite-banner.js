@@ -1,6 +1,14 @@
 import alt from 'alt-server'
 
 (() => {
+  const defaultJSFuncProps = {
+    length: true,
+    name: true,
+    arguments: true,
+    caller: true,
+    prototype: true,
+  }
+
   const {
     BaseObject,
     WorldObject,
@@ -9,8 +17,8 @@ import alt from 'alt-server'
     Colshape,
     Player,
   } = alt
-  const baseObjects = new Set()
 
+  const baseObjects = new Set()
   const clearPlayersMeta = overwritePlayerMetaMethods(Player)
 
   for (const key in alt) {
@@ -120,17 +128,30 @@ import alt from 'alt-server'
       }
     }
 
-    for (const key in BaseObjectChild) {
-      WrappedBaseObjectChild[key] = BaseObjectChild[key]
+    WrappedBaseObjectChild.prototype = BaseObjectChild.prototype
+    Object.defineProperty(WrappedBaseObjectChild, 'name', {
+      value: BaseObjectChild.name,
+    })
+
+    const originalDescriptors = Object.getOwnPropertyDescriptors(BaseObjectChild)
+
+    // wrap all static stuff from BaseObjectChild
+    for (const key in originalDescriptors) {
+      if (defaultJSFuncProps[key]) continue
+
+      const { value, set } = originalDescriptors[key]
+
+      // static method
+      if (typeof value === 'function') {
+        WrappedBaseObjectChild[key] = BaseObjectChild[key]
+      // static getter/setter
+      } else {
+        Object.defineProperty(WrappedBaseObjectChild, key, {
+          get: () => BaseObjectChild[key],
+          set: set?.bind(BaseObjectChild),
+        })
+      }
     }
-
-    WrappedBaseObjectChild.prototype = proto
-
-    Object.defineProperty(
-      WrappedBaseObjectChild,
-      'name', {
-        value: BaseObjectChild.name,
-      })
 
     return WrappedBaseObjectChild
   }
