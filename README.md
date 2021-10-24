@@ -1,6 +1,7 @@
 # esbuild-plugin-altv-dev-server
 
 [esbuild](https://esbuild.github.io/) plugin for extremely fast serverside development using JS/TS on [alt:V](https://altv.mp).
+[![youtube](http://img.youtube.com/vi/M70sMF3eXN0/0.jpg)](http://www.youtube.com/watch?v=M70sMF3eXN0)
 
 This plugin imports `alt-server` once at the top of the bundle and replaces all your `alt-server` imports with its common variable.
 
