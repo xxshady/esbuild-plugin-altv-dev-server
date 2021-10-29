@@ -9,7 +9,7 @@ const bannerContent = readFileSync(join(__dirname, 'alt-overwrite-banner.js'))
 /**
  * @returns {import('esbuild').Plugin}
  */
-const altvServerDev = () => ({
+const altvServerDev = (disableBanner = false) => ({
   name: pluginName,
   setup (build) {
     let { initialOptions: { banner } } = build
@@ -22,7 +22,7 @@ const altvServerDev = () => ({
 
     banner = banner ?? { js: '' }
 
-    banner.js += jsBanner
+    if(!disableBanner) banner.js += jsBanner
 
     build.initialOptions.banner = banner
 
