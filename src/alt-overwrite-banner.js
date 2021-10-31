@@ -107,7 +107,7 @@ import alt from 'alt-server'
         this[originalDestroy]()
         // alt.log('destroyed baseobject:', BaseObjectChild.name)
       } catch (error) {
-        alt.logError(`failed destroy alt.${BaseObjectChild.name} error:`)
+        logError(`failed destroy alt.${BaseObjectChild.name} error:`)
         throw error
       }
     }
@@ -117,13 +117,13 @@ import alt from 'alt-server'
         const baseObject = new BaseObjectChild(...args)
 
         baseObjects.add(baseObject)
-        // fix prototype in inherited from BaseObjectChild classes
+        // fix prototype in inherited from altv classes
         baseObject.__proto__ = this.__proto__
 
         return baseObject
         // alt.log('created baseobject:', BaseObjectChild.name)
       } catch (error) {
-        alt.logError(`failed create alt.${BaseObjectChild.name} error:`)
+        logError(`failed create alt.${BaseObjectChild.name} error:`)
         throw error
       }
     }
@@ -133,26 +133,46 @@ import alt from 'alt-server'
       value: BaseObjectChild.name,
     })
 
-    const originalDescriptors = Object.getOwnPropertyDescriptors(BaseObjectChild)
+    try {
+      const originalKeys = Object.keys(BaseObjectChild)
 
-    // wrap all static stuff from BaseObjectChild
-    for (const key in originalDescriptors) {
-      if (defaultJSFuncProps[key]) continue
+      // wrap all static stuff from original altv class
+      for (const key of originalKeys) {
+        if (defaultJSFuncProps[key]) continue
 
-      const { value, set } = originalDescriptors[key]
+        try {
+          // alt.log(`wrapping class: ${BaseObjectChild.name} key: ${key}`)
+          const { value, set } = Object.getOwnPropertyDescriptor(BaseObjectChild, key)
 
-      // static method
-      if (typeof value === 'function') {
-        WrappedBaseObjectChild[key] = BaseObjectChild[key]
-      // static getter/setter
-      } else {
-        Object.defineProperty(WrappedBaseObjectChild, key, {
-          get: () => BaseObjectChild[key],
-          set: set?.bind(BaseObjectChild),
-        })
+          // static method
+          if (typeof value === 'function') {
+            WrappedBaseObjectChild[key] = BaseObjectChild[key]
+            // static getter/setter
+          } else {
+            Object.defineProperty(WrappedBaseObjectChild, key, {
+              get: () => BaseObjectChild[key],
+              set: set?.bind(BaseObjectChild),
+            })
+          }
+        } catch (e) {
+          logError(
+            `detected broken alt.${BaseObjectChild.name} static property: ${key}. \n`,
+            e.stack,
+          )
+        }
       }
+    } catch (e) {
+      logError(e.stack)
     }
 
     return WrappedBaseObjectChild
+  }
+
+  function logError (...args) {
+    alt.logError(
+      '[esbuild-altv-dev]',
+      'Please open issue on github of this plugin. \n',
+      ...(args[0].stack ? [args[0].stack] : args),
+    )
   }
 })()
