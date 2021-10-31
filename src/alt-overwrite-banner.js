@@ -40,10 +40,12 @@ import alt from 'alt-server'
 
   alt.on('resourceStop', () => {
     // alt.log('resourceStop baseobjects:', baseObjects.size)
+
     for (const obj of baseObjects) {
       obj.destroy()
-      clearPlayersMeta()
     }
+
+    clearPlayersMeta()
   })
 
   function overwritePlayerMetaMethods (Player) {
