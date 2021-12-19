@@ -1,3 +1,4 @@
+/* global ___fs ___BUNDLE_PATH___ */
 import alt from 'alt-server'
 
 (() => {
@@ -46,6 +47,10 @@ import alt from 'alt-server'
     }
 
     clearPlayersMeta()
+  })
+
+  ___fs.watch(___BUNDLE_PATH___, (...args) => {
+    console.log('[esbuild-altv-dev-server]', 'fs watch', args)
   })
 
   function overwritePlayerMetaMethods (Player) {

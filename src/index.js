@@ -12,10 +12,33 @@ const bannerContent = readFileSync(join(__dirname, 'alt-overwrite-banner.js'))
 const altvServerDev = () => ({
   name: pluginName,
   setup (build) {
-    let { initialOptions: { banner } } = build
+    let {
+      initialOptions: {
+        banner,
+        outfile,
+        // TODO outdir handling
+        // outdir,
+      },
+    } = build
+
+    const outfileName = outfile.slice(outfile[0] === '.' ? 2 : 1)
+
+    console.log(`[${pluginName}]`, 'outfileName:', outfileName)
+
+    const replaceStr = (str, char, replace) => {
+      let newStr = ''
+
+      for (let i = 0; i < str.length; i++) {
+        newStr += str[i] === char ? replace : str[i]
+      }
+
+      return newStr
+    }
 
     const jsBanner = (
       '\n// ----- esbuild-plugin-altv-dev-server -----\n' +
+      'import ___fs from "fs";\n' +
+      `const ___BUNDLE_PATH___ = "${replaceStr(__dirname, '\\', '/') + '/' + outfileName}"; \n\n` +
       bannerContent +
       '\n// ----- esbuild-plugin-altv-dev-server -----\n'
     )
