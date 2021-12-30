@@ -7,7 +7,7 @@
 This tool allows you to use [server restart command](https://docs.altv.mp/articles/commandlineargs.html#server-commands) on your resource 
 without the need for a complete restart of the server, as well as a reconnect on the client
 
-#### So far, the plugin does not have the option of hot code reloading. [See planned feature](https://github.com/xxshady/esbuild-plugin-altv-dev-server/issue/3)
+#### So far, the plugin does not have the option of hot code reloading. [See planned feature](https://github.com/xxshady/esbuild-plugin-altv-dev-server/issues/3)
 
 ### Installation
 
