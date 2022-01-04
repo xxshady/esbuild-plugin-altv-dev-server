@@ -9,9 +9,9 @@ without the need for a complete restart of the server, as well as a reconnect on
 
 #### So far, the plugin does not have the option of hot code reloading. [See planned feature](https://github.com/xxshady/esbuild-plugin-altv-dev-server/issues/3)
 
-### Installation
+## Installation
 
-#### Download the plugin
+### Download the plugin
 
 The plugin is available via npm:
 
@@ -22,7 +22,7 @@ yarn add -D esbuild-plugin-altv-dev-server
 npm i -D esbuild-plugin-altv-dev-server
 ```
 
-#### Add the plugin to your esbuild config
+### Usage
 
 ```js
 import altvDevServer from "esbuild-plugin-altv-dev-server"
@@ -35,7 +35,23 @@ esbuild.build({
   outfile: "dist/bundle.js",
   bundle: true,
   watch: devMode,
-  plugins: devMode ? [altvDevServer()] : [],
+  plugins: devMode 
+    ? [altvDevServer({
+      // enables auto restart of your resource,
+      // emulation of reconnect players to the server (reconnectPlayers option) 
+      // and resource startup error handling (handleStartupErrors option)
+      hotReload: boolean,
+      
+      // these options are enabled automatically with hotReload and can be omitted:
+
+      // enables auto emulation of players reconnect to the server
+      // with some delay after resource start (default 200ms)
+      // (for e.g. you need to wait until your database is loaded or any other async stuff)
+      reconnectPlayers: boolean | { delay: number (ms) },
+      // Handles exceptions during the resource startup "[Error] Failed to load resource <name>"
+      handleStartupErrors: boolean
+    })]
+    : [],
 })
 ```
 
