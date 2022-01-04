@@ -1,4 +1,4 @@
-/* global ___ALTV_DEV_SERVER_HR_FS___ ___ALTV_DEV_SERVER_HR_BUNDLE_PATH___ */
+/* global ___ALTV_DEV_SERVER_HR_FS___ ___ALTV_DEV_SERVER_HR_BUNDLE_PATH___ ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ */
 import alt from 'alt-server'
 
 (() => {
@@ -17,6 +17,8 @@ import alt from 'alt-server'
     Blip,
     Colshape,
     Player,
+    resourceName,
+    defaultDimension,
   } = alt
 
   const baseObjects = new Set()
@@ -50,6 +52,7 @@ import alt from 'alt-server'
   })
 
   if (typeof ___ALTV_DEV_SERVER_HR_FS___ !== 'undefined') initHotReload()
+  if (typeof ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ !== 'undefined') initReconnectPlayers()
 
   function overwritePlayerMetaMethods (Player) {
     const proto = Player.prototype
@@ -174,7 +177,6 @@ import alt from 'alt-server'
   }
 
   function initHotReload () {
-    const { resourceName } = alt
     const MIN_FILE_CHANGE_MS = 200
     let lastBundleChange = 0
 
@@ -188,6 +190,33 @@ import alt from 'alt-server'
       log(`~cl~[hot-reload]~w~ restarting ~gl~${resourceName}~w~ resource...`)
       alt.restartResource(resourceName)
     })
+  }
+
+  function initReconnectPlayers () {
+    const resourceRestartedKey = `___ALTV_DEV_SERVER_${resourceName}_RESTARTED___`
+    const initialPos = { x: 0, y: 0, z: 72 }
+
+    if (!alt.getMeta(resourceRestartedKey)) {
+      alt.setMeta(resourceRestartedKey, true)
+      return
+    }
+
+    log(`start a timer for ~cl~${___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___}~w~ ms to reconnect players`)
+
+    const players = alt.Player.all
+
+    for (const p of players) {
+      p.dimension = defaultDimension
+      p.pos = initialPos
+      p.removeAllWeapons()
+      p.clearBloodDamage()
+    }
+
+    alt.setTimeout(() => {
+      for (const p of players) {
+        alt.emit('playerConnect', p)
+      }
+    }, ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___)
   }
 
   function logError (...args) {

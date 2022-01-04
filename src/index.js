@@ -7,8 +7,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const bannerContent = readFileSync(join(__dirname, 'alt-overwrite-banner.js'))
 const consoleBlueColor = '\x1b[34m'
 const consoleResetColor = '\x1b[0m'
+const upperCasePluginName = replaceStringChar(pluginName, '-', '_').toUpperCase()
+const defaultReconnectPlayersDelay = 200
 
 /**
+ * @param {import('./index').IOptions} options
  * @returns {import('esbuild').Plugin}
  */
 const altvServerDev = (options = {}) => ({
@@ -17,9 +20,12 @@ const altvServerDev = (options = {}) => ({
     const {
       hotReload = false,
       handleStartupErrors = hotReload,
+      reconnectPlayers = hotReload,
     } = options
 
-    log('hotReload:', hotReload, 'handleStartupErrors:', handleStartupErrors)
+    log('hotReload:', hotReload)
+    log('handleStartupErrors:', handleStartupErrors)
+    log('reconnectPlayers:', reconnectPlayers)
 
     let {
       initialOptions: {
@@ -34,6 +40,7 @@ const altvServerDev = (options = {}) => ({
     let hotReloadCode = ''
     let startupErrorsHandlingBanner = ''
     let startupErrorsHandlingFooter = ''
+    let reconnectPlayersBanner = ''
 
     if (hotReload) {
       let outfileName
@@ -75,11 +82,24 @@ const altvServerDev = (options = {}) => ({
       )
     }
 
+    if (reconnectPlayers) {
+      let delay
+
+      if (typeof reconnectPlayers.delay === 'number') {
+        delay = reconnectPlayers.delay
+      } else {
+        delay = defaultReconnectPlayersDelay
+      }
+
+      reconnectPlayersBanner = `const ${generateVarName('RECONNECT_PLAYERS_DELAY')} = ${delay}\n`
+    }
+
     const jsBanner = (
       '\n// --------------------- esbuild-plugin-altv-dev-server ---------------------\n' +
       hotReloadCode +
-      startupErrorsHandlingBanner +
+      reconnectPlayersBanner +
       bannerContent +
+      startupErrorsHandlingBanner +
       '\n// --------------------- esbuild-plugin-altv-dev-server ---------------------\n'
     )
 
@@ -107,11 +127,9 @@ const altvServerDev = (options = {}) => ({
 })
 
 function generateHotReloadCode (bundlePath) {
-  const upperCasePluginName = replaceStringChar(pluginName, '-', '_').toUpperCase()
-
   return (
-    `import ___${upperCasePluginName}_HR_FS___ from "fs"\n` +
-    `const ___${upperCasePluginName}_HR_BUNDLE_PATH___ = "${bundlePath}"\n\n`
+    `import ${generateVarName('HR_FS')} from "fs"\n` +
+    `const ${generateVarName('HR_BUNDLE_PATH')} = "${bundlePath}"\n\n`
   )
 }
 
@@ -123,6 +141,10 @@ function replaceStringChar (str, char, replace) {
   }
 
   return newStr
+}
+
+function generateVarName (varName) {
+  return `___${upperCasePluginName}_${varName}___`
 }
 
 function log (...args) {
