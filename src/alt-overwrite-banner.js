@@ -1,3 +1,4 @@
+/* global ___ALTV_DEV_SERVER_HR_FS___ ___ALTV_DEV_SERVER_HR_BUNDLE_PATH___ */
 import alt from 'alt-server'
 
 (() => {
@@ -47,6 +48,8 @@ import alt from 'alt-server'
 
     clearPlayersMeta()
   })
+
+  if (typeof ___ALTV_DEV_SERVER_HR_FS___ !== 'undefined') initHotReload()
 
   function overwritePlayerMetaMethods (Player) {
     const proto = Player.prototype
@@ -170,11 +173,32 @@ import alt from 'alt-server'
     return WrappedBaseObjectChild
   }
 
+  function initHotReload () {
+    const { resourceName } = alt
+    const MIN_FILE_CHANGE_MS = 200
+    let lastBundleChange = 0
+
+    ___ALTV_DEV_SERVER_HR_FS___.watch(___ALTV_DEV_SERVER_HR_BUNDLE_PATH___, (...args) => {
+      const now = +new Date()
+      const elapsed = (now - lastBundleChange)
+
+      if (elapsed < MIN_FILE_CHANGE_MS) return
+      lastBundleChange = now
+
+      log(`~cl~[hot-reload]~w~ restarting ~gl~${resourceName}~w~ resource...`)
+      alt.restartResource(resourceName)
+    })
+  }
+
   function logError (...args) {
     alt.logError(
       '[esbuild-altv-dev]',
       'Please open issue on github of this plugin. \n',
       ...(args[0].stack ? [args[0].stack] : args),
     )
+  }
+
+  function log (...args) {
+    alt.log('~lm~[esbuild-altv-dev]~w~', ...args)
   }
 })()

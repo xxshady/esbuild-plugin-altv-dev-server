@@ -1,5 +1,10 @@
 import { Plugin } from 'esbuild'
 
-declare function altvServerDev (): Plugin
+interface IOptions {
+  hotReload?: boolean
+  handleStartupErrors?: boolean
+}
+
+declare function altvServerDev (options?: IOptions): Plugin
 
 export default altvServerDev
