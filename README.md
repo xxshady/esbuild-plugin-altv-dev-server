@@ -1,13 +1,11 @@
 # esbuild-plugin-altv-dev-server
 
-[esbuild](https://esbuild.github.io/) plugin for extremely fast serverside development using JS/TS on [alt:V](https://altv.mp).
+[esbuild](https://esbuild.github.io/) plugin for extremely fast serverside development using JS/TS on [alt:V](https://altv.mp)
 
 [![youtube](http://img.youtube.com/vi/M70sMF3eXN0/0.jpg)](http://www.youtube.com/watch?v=M70sMF3eXN0)
 
-This tool allows you to use [server restart command](https://docs.altv.mp/articles/commandlineargs.html#server-commands) on your resource 
-without the need for a complete restart of the server, as well as a reconnect on the client
-
-#### So far, the plugin does not have the option of hot code reloading. [See planned feature](https://github.com/xxshady/esbuild-plugin-altv-dev-server/issues/3)
+This tool allows you to this plugin allows you to see code changes immediately (hot reload) without reconnecting and restarting the server 
+(to restart manually, you can use [server restart command](https://docs.altv.mp/articles/commandlineargs.html#server-commands))
 
 ## Installation
 
