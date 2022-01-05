@@ -10,6 +10,8 @@ build({
   entryPoints: ['./src/main.ts'],
   outfile: './server-dist.js',
   plugins: [
-    altvServerDev(),
+    altvServerDev({
+      hotReload: true
+    }),
   ],
 })

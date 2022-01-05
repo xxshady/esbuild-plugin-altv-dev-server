@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "esbuild": "^0.13.8",
-    "esbuild-plugin-altv-dev-server": "^1.0.0"
+    "esbuild-plugin-altv-dev-server": "^1.1.0"
   },
   "type": "module",
   "devDependencies": {

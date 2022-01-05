@@ -77,10 +77,10 @@ esbuild-openbsd-64@0.13.8:
   resolved "https://registry.yarnpkg.com/esbuild-openbsd-64/-/esbuild-openbsd-64-0.13.8.tgz#88b280b6cb0a3f6adb60abf27fc506c506a35cf0"
   integrity sha512-afzza308X4WmcebexbTzAgfEWt9MUkdTvwIa8xOu4CM2qGbl2LanqEl8/LUs8jh6Gqw6WsicEK52GPrS9wvkcw==
 
-esbuild-plugin-altv-dev-server@^1.0.0:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/esbuild-plugin-altv-dev-server/-/esbuild-plugin-altv-dev-server-1.0.2.tgz#3f0e5c8e451424559b447443689ee4a8141c0425"
-  integrity sha512-GpM6I7RFPfSdQ9U6B3l7r/LhNTanVLWZrJcf3E7KCnzMHZPXgdf7RLHO15oZUSKYffK8WoMHTown6jr1V3aKTg==
+esbuild-plugin-altv-dev-server@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/esbuild-plugin-altv-dev-server/-/esbuild-plugin-altv-dev-server-1.1.0.tgz#ec808026a3ce82aef33699ac49638c3601b72798"
+  integrity sha512-9dLgQ0ojNjXPUd4OGQExjst4qi/W0zpevKhlisfJ1fGvG+yMJGRe1TFz6w1w6RZSyKVPnDTZ71oHIRFqwy9Lqg==
 
 esbuild-sunos-64@0.13.8:
   version "0.13.8"

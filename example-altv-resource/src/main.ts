@@ -17,28 +17,3 @@ alt.on('playerConnect', (player) => {
     player.setIntoVehicle(veh, 1)
   }, 1000)
 })
-
-// emulate players reconnect for dev purposes
-// since the players themselves do not reconnect on the restart of the resource
-alt.on('resourceStart', () => {
-  const { resourceName } = alt
-  const isAlreadyStartedKey = `${resourceName}:isAlreadyStarted`
-  const isAlreadyStarted = alt.getMeta(isAlreadyStartedKey) || false
-
-  alt.log('[resourceStart]', 'isAlreadyStarted:', isAlreadyStarted)
-
-  if (!isAlreadyStarted) {
-    alt.setMeta(isAlreadyStartedKey, true)
-    return
-  }
-
-  const players = alt.Player.all
-
-  // delaying the emulation of the players' reconnect
-  // (for example, you need to wait until your database is loaded or any other async stuff)
-  alt.setTimeout(() => {
-    for (let i = 0; i < players.length; i++) {
-      alt.emit('playerConnect', players[i])
-    }
-  }, 500)
-})
