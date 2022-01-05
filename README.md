@@ -1,6 +1,6 @@
 # esbuild-plugin-altv-dev-server
 
-[esbuild](https://esbuild.github.io/) plugin for extremely fast serverside development using JS/TS on [alt:V](https://altv.mp)
+[esbuild](https://esbuild.github.io/) plugin for extremely fast development using JS/TS on [alt:V](https://altv.mp)
 
 [![youtube](http://img.youtube.com/vi/pbezU0NRTLk/0.jpg)](http://www.youtube.com/watch?v=pbezU0NRTLk)
 
