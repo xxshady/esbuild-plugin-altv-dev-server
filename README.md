@@ -39,6 +39,9 @@ esbuild.build({
       // emulation of reconnect players to the server (reconnectPlayers option) 
       // and resource startup error handling (handleStartupErrors option)
       hotReload: boolean,
+      // use the client path so that the plugin can restart the resource when client code changes
+      // (see example usage in example resource)
+      // hotReload: { clientPath: './client-dist.js' }
       
       // these options are enabled automatically with hotReload and can be omitted:
 
