@@ -2,8 +2,7 @@
 
 [esbuild](https://esbuild.github.io/) plugin for extremely fast serverside development using JS/TS on [alt:V](https://altv.mp)
 
-[![youtube](http://img.youtube.com/vi/M70sMF3eXN0/0.jpg)](http://www.youtube.com/watch?v=M70sMF3eXN0)
-
+[![youtube](http://img.youtube.com/vi/pbezU0NRTLk/0.jpg)](http://www.youtube.com/watch?v=pbezU0NRTLk)
 This plugin allows you to see code changes immediately (hot reload) without reconnecting and restarting the server 
 (to restart manually, you can use [server restart command](https://docs.altv.mp/articles/commandlineargs.html#server-commands))
 
