@@ -85,7 +85,6 @@ const altvServerDev = (options = {}) => ({
       }
 
       hotReloadCode = generateHotReloadCode(bundlePath, clientFullPath)
-      log('hotReloadCode:', hotReloadCode)
     }
 
     if (handleStartupErrors) {
