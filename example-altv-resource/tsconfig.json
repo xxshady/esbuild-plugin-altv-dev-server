@@ -15,6 +15,7 @@
     "typeRoots": ["./node_modules/@altv"],
   },
   "include": [
-    "./src/**/*"
+    "./server-src/**/*",
+    "./client-src/**/*"
   ],
 }

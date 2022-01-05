@@ -1,4 +1,4 @@
-/* global ___ALTV_DEV_SERVER_HR_FS___ ___ALTV_DEV_SERVER_HR_BUNDLE_PATH___ ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ */
+/* global ___ALTV_DEV_SERVER_HR_FS___ ___ALTV_DEV_SERVER_HR_BUNDLE_PATH___ ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ ___ALTV_DEV_SERVER_HR_CLIENT_PATH___ */
 import alt from 'alt-server'
 
 (() => {
@@ -190,6 +190,19 @@ import alt from 'alt-server'
       log(`~cl~[hot-reload]~w~ restarting ~gl~${resourceName}~w~ resource...`)
       alt.restartResource(resourceName)
     })
+
+    if (typeof ___ALTV_DEV_SERVER_HR_CLIENT_PATH___ === 'string') {
+      ___ALTV_DEV_SERVER_HR_FS___.watch(___ALTV_DEV_SERVER_HR_CLIENT_PATH___, () => {
+        const now = +new Date()
+        const elapsed = (now - lastBundleChange)
+
+        if (elapsed < MIN_FILE_CHANGE_MS) return
+        lastBundleChange = now
+
+        log(`~cl~[hot-reload]~w~ restarting ~gl~${resourceName}~w~ resource... (client change)`)
+        alt.restartResource(resourceName)
+      })
+    }
   }
 
   function initReconnectPlayers () {

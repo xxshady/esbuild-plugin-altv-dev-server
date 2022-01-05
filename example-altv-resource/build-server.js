@@ -7,11 +7,13 @@ build({
   target: 'esnext',
   logLevel: 'info',
   format: 'esm',
-  entryPoints: ['./src/main.ts'],
+  entryPoints: ['./server-src/main.ts'],
   outfile: './server-dist.js',
-  plugins: [
-    altvServerDev({
-      hotReload: true
-    }),
-  ],
+  // plugins: [
+  //   altvServerDev({
+  //     hotReload: {
+  //       clientPath: './client-dist.js'
+  //     },
+  //   }),
+  // ],
 })

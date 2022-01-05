@@ -1,4 +1,4 @@
-## To test this resource:
+## To test this resource
 
 * copy "example-altv-resource" folder into your server resources folder
 * run `npm install` in "example-altv-resource" folder

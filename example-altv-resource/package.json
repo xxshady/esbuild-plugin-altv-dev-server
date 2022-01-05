@@ -4,15 +4,18 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "node --es-module-specifier-resolution=node build.js"
+    "start-server": "node --es-module-specifier-resolution=node build-server.js",
+    "start-client": "node --es-module-specifier-resolution=node build-client.js",
+    "start": "concurrently npm:start-*"
   },
   "dependencies": {
+    "@altv/types-client": "^2.0.0",
+    "@altv/types-natives": "^1.4.4",
+    "@altv/types-server": "^2.1.8",
+    "@altv/types-shared": "^1.1.2",
+    "concurrently": "^7.0.0",
     "esbuild": "^0.13.8",
     "esbuild-plugin-altv-dev-server": "^1.1.0"
   },
-  "type": "module",
-  "devDependencies": {
-    "@altv/types-server": "^2.0.6",
-    "@altv/types-shared": "^1.0.7"
-  }
+  "type": "module"
 }

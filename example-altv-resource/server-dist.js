@@ -1,56 +1,64 @@
 
-// ----- esbuild-plugin-altv-dev-server -----
+// --------------------- esbuild-plugin-altv-dev-server ---------------------
+import ___ALTV_DEV_SERVER_HR_FS___ from "fs"
+const ___ALTV_DEV_SERVER_HR_BUNDLE_PATH___ = "C:/altv-dev/ts-test-gm/resources/example-altv-resource/server-dist.js"
+const ___ALTV_DEV_SERVER_HR_CLIENT_PATH___ = "C:/altv-dev/ts-test-gm/resources/example-altv-resource/client-dist.js"
+const ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ = 200
+/* global ___ALTV_DEV_SERVER_HR_FS___ ___ALTV_DEV_SERVER_HR_BUNDLE_PATH___ ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ ___ALTV_DEV_SERVER_HR_CLIENT_PATH___ */
 import alt from 'alt-server'
 
 (() => {
-  const BaseObject = alt.BaseObject
-  const Player = alt.Player
-  const baseObjects = new Set()
+  const defaultJSFuncProps = {
+    length: true,
+    name: true,
+    arguments: true,
+    caller: true,
+    prototype: true,
+  }
 
+  const {
+    BaseObject,
+    WorldObject,
+    Entity,
+    Blip,
+    Colshape,
+    Player,
+    resourceName,
+    defaultDimension,
+  } = alt
+
+  const baseObjects = new Set()
   const clearPlayersMeta = overwritePlayerMetaMethods(Player)
 
   for (const key in alt) {
-    const baseObjectChild = alt[key]
+    const baseObjectClass = alt[key]
+    const proto = baseObjectClass.prototype
 
     if (!(
-      baseObjectChild !== BaseObject &&
-      baseObjectChild !== Player &&
-      baseObjectChild.prototype instanceof BaseObject
+      proto instanceof BaseObject &&
+      baseObjectClass !== BaseObject &&
+      baseObjectClass !== WorldObject &&
+      baseObjectClass !== Entity &&
+      baseObjectClass !== Blip &&
+      baseObjectClass !== Colshape &&
+      baseObjectClass !== Player
     )) continue
 
-    alt[key] = class extends baseObjectChild {
-      // eslint-disable-next-line constructor-super
-      constructor (...args) {
-        try {
-          super(...args)
-          baseObjects.add(this)
-          // alt.log('created baseobject:', baseObjectChild.name)
-        } catch (error) {
-          alt.logError(`failed create alt.${baseObjectChild.name} error:`)
-          throw error
-        }
-      }
-
-      destroy () {
-        try {
-          baseObjects.delete(this)
-          super.destroy()
-          // alt.log('destroyed baseobject:', baseObjectChild.name)
-        } catch (error) {
-          alt.logError(`failed destroy alt.${baseObjectChild.name} error:`)
-          throw error
-        }
-      }
-    }
+    alt[key] = wrapBaseObjectChildClass(baseObjectClass)
   }
 
   alt.on('resourceStop', () => {
     // alt.log('resourceStop baseobjects:', baseObjects.size)
+
     for (const obj of baseObjects) {
       obj.destroy()
-      clearPlayersMeta()
     }
+
+    clearPlayersMeta()
   })
+
+  if (typeof ___ALTV_DEV_SERVER_HR_FS___ !== 'undefined') initHotReload()
+  if (typeof ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ !== 'undefined') initReconnectPlayers()
 
   function overwritePlayerMetaMethods (Player) {
     const proto = Player.prototype
@@ -100,9 +108,151 @@ import alt from 'alt-server'
       }
     }
   }
-})()
 
-// ----- esbuild-plugin-altv-dev-server -----
+  function wrapBaseObjectChildClass (BaseObjectChild) {
+    const proto = BaseObjectChild.prototype
+    const originalDestroy = Symbol('originalDestroy')
+
+    proto[originalDestroy] = proto.destroy
+
+    proto.destroy = function () {
+      try {
+        baseObjects.delete(this)
+        this[originalDestroy]()
+        // alt.log('destroyed baseobject:', BaseObjectChild.name)
+      } catch (error) {
+        logError(`failed destroy alt.${BaseObjectChild.name} error:`)
+        throw error
+      }
+    }
+
+    const WrappedBaseObjectChild = function (...args) {
+      try {
+        const baseObject = new BaseObjectChild(...args)
+
+        baseObjects.add(baseObject)
+        // fix prototype in inherited from altv classes
+        baseObject.__proto__ = this.__proto__
+
+        return baseObject
+        // alt.log('created baseobject:', BaseObjectChild.name)
+      } catch (error) {
+        logError(`failed create alt.${BaseObjectChild.name} error:`)
+        throw error
+      }
+    }
+
+    WrappedBaseObjectChild.prototype = BaseObjectChild.prototype
+    Object.defineProperty(WrappedBaseObjectChild, 'name', {
+      value: BaseObjectChild.name,
+    })
+
+    try {
+      const originalKeys = Object.keys(BaseObjectChild)
+
+      // wrap all static stuff from original altv class
+      for (const key of originalKeys) {
+        if (defaultJSFuncProps[key]) continue
+
+        try {
+          // alt.log(`wrapping class: ${BaseObjectChild.name} key: ${key}`)
+          const { value, set } = Object.getOwnPropertyDescriptor(BaseObjectChild, key)
+
+          // static method
+          if (typeof value === 'function') {
+            WrappedBaseObjectChild[key] = BaseObjectChild[key]
+            // static getter/setter
+          } else {
+            Object.defineProperty(WrappedBaseObjectChild, key, {
+              get: () => BaseObjectChild[key],
+              set: set?.bind(BaseObjectChild),
+            })
+          }
+        } catch (e) {
+          logError(
+            `detected broken alt.${BaseObjectChild.name} static property: ${key}. \n`,
+            e.stack,
+          )
+        }
+      }
+    } catch (e) {
+      logError(e.stack)
+    }
+
+    return WrappedBaseObjectChild
+  }
+
+  function initHotReload () {
+    const MIN_FILE_CHANGE_MS = 200
+    let lastBundleChange = 0
+
+    ___ALTV_DEV_SERVER_HR_FS___.watch(___ALTV_DEV_SERVER_HR_BUNDLE_PATH___, (...args) => {
+      const now = +new Date()
+      const elapsed = (now - lastBundleChange)
+
+      if (elapsed < MIN_FILE_CHANGE_MS) return
+      lastBundleChange = now
+
+      log(`~cl~[hot-reload]~w~ restarting ~gl~${resourceName}~w~ resource...`)
+      alt.restartResource(resourceName)
+    })
+
+    if (typeof ___ALTV_DEV_SERVER_HR_CLIENT_PATH___ === 'string') {
+      ___ALTV_DEV_SERVER_HR_FS___.watch(___ALTV_DEV_SERVER_HR_CLIENT_PATH___, () => {
+        const now = +new Date()
+        const elapsed = (now - lastBundleChange)
+
+        if (elapsed < MIN_FILE_CHANGE_MS) return
+        lastBundleChange = now
+
+        log(`~cl~[hot-reload]~w~ restarting ~gl~${resourceName}~w~ resource... (client change)`)
+        alt.restartResource(resourceName)
+      })
+    }
+  }
+
+  function initReconnectPlayers () {
+    const resourceRestartedKey = `___ALTV_DEV_SERVER_${resourceName}_RESTARTED___`
+    const initialPos = { x: 0, y: 0, z: 72 }
+
+    if (!alt.getMeta(resourceRestartedKey)) {
+      alt.setMeta(resourceRestartedKey, true)
+      return
+    }
+
+    log(`start a timer for ~cl~${___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___}~w~ ms to reconnect players`)
+
+    const players = alt.Player.all
+
+    for (const p of players) {
+      p.dimension = defaultDimension
+      p.pos = initialPos
+      p.removeAllWeapons()
+      p.clearBloodDamage()
+    }
+
+    alt.setTimeout(() => {
+      for (const p of players) {
+        alt.emit('playerConnect', p)
+      }
+    }, ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___)
+  }
+
+  function logError (...args) {
+    alt.logError(
+      '[esbuild-altv-dev]',
+      'Please open issue on github of this plugin. \n',
+      ...(args[0].stack ? [args[0].stack] : args),
+    )
+  }
+
+  function log (...args) {
+    alt.log('~lm~[esbuild-altv-dev]~w~', ...args)
+  }
+})()
+try {
+
+// --------------------- esbuild-plugin-altv-dev-server ---------------------
 
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -133,30 +283,17 @@ var require_alt_server = __commonJS({
   }
 });
 
-// src/main.ts
+// server-src/main.ts
 var alt2 = __toModule(require_alt_server());
 alt2.on("playerConnect", (player) => {
   alt2.log("~gl~[playerConnect]~w~", "player:~cl~", player.name);
-  player.pos = new alt2.Vector3(0, 0, 72);
+  player.pos = new alt2.Vector3(0, 0, 71);
   player.model = "mp_m_freemode_01";
-  alt2.setTimeout(() => {
-    const veh = new alt2.Vehicle("sultan2", 0, 5, 71, 0, 0, 0);
-    player.setIntoVehicle(veh, 1);
-  }, 1e3);
 });
-alt2.on("resourceStart", () => {
-  const { resourceName } = alt2;
-  const isAlreadyStartedKey = `${resourceName}:isAlreadyStarted`;
-  const isAlreadyStarted = alt2.getMeta(isAlreadyStartedKey) || false;
-  alt2.log("[resourceStart]", "isAlreadyStarted:", isAlreadyStarted);
-  if (!isAlreadyStarted) {
-    alt2.setMeta(isAlreadyStartedKey, true);
-    return;
-  }
-  alt2.setTimeout(() => {
-    const players = alt2.Player.all;
-    for (let i = 0; i < players.length; i++) {
-      alt2.emit("playerConnect", players[i]);
-    }
-  }, 500);
-});
+
+} catch (e) {
+  alt.nextTick(() => {
+    alt.logError(e.stack)
+    alt.logError('[altv-dev-server] Failed to load resource', alt.resourceName)
+  })
+}

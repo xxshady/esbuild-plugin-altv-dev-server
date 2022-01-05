@@ -4,8 +4,12 @@ export interface IReconnectPlayers {
   delay: number
 }
 
+export interface IHotReload {
+  clientPath: string
+}
+
 export interface IOptions {
-  hotReload?: boolean
+  hotReload?: boolean | IHotReload
   handleStartupErrors?: boolean
   reconnectPlayers?: boolean | IReconnectPlayers
 }

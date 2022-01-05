@@ -19,8 +19,8 @@ const altvServerDev = (options = {}) => ({
   setup (build) {
     const {
       hotReload = false,
-      handleStartupErrors = hotReload,
-      reconnectPlayers = hotReload,
+      handleStartupErrors = !!hotReload,
+      reconnectPlayers = !!hotReload,
     } = options
 
     log('hotReload:', hotReload)
@@ -43,6 +43,8 @@ const altvServerDev = (options = {}) => ({
     let reconnectPlayersBanner = ''
 
     if (hotReload) {
+      const { clientPath = null } = hotReload
+
       let outfileName
 
       if (outdir) {
@@ -63,10 +65,27 @@ const altvServerDev = (options = {}) => ({
 
       // log('outfileName:', outfileName)
 
-      const bundlePath = replaceStringChar(process.cwd(), '\\', '/') + '/' + outfileName
+      const cwd = replaceStringChar(process.cwd(), '\\', '/')
+
+      const bundlePath = `${cwd}/${outfileName}`
       // log('bundlePath:', bundlePath)
 
-      hotReloadCode = generateHotReloadCode(bundlePath)
+      let clientFullPath = null
+
+      if (clientPath) {
+        clientFullPath = `${cwd}/`
+
+        if (clientPath.startsWith('./')) {
+          clientFullPath += clientPath.slice(2)
+        } else if (clientPath.startsWith('/')) {
+          clientFullPath += clientPath.slice(1)
+        } else {
+          clientFullPath += clientPath
+        }
+      }
+
+      hotReloadCode = generateHotReloadCode(bundlePath, clientFullPath)
+      log('hotReloadCode:', hotReloadCode)
     }
 
     if (handleStartupErrors) {
@@ -126,10 +145,15 @@ const altvServerDev = (options = {}) => ({
   },
 })
 
-function generateHotReloadCode (bundlePath) {
+function generateHotReloadCode (bundlePath, clientPath = null) {
   return (
     `import ${generateVarName('HR_FS')} from "fs"\n` +
-    `const ${generateVarName('HR_BUNDLE_PATH')} = "${bundlePath}"\n\n`
+    `const ${generateVarName('HR_BUNDLE_PATH')} = "${bundlePath}"\n` +
+    (
+      clientPath
+        ? `const ${generateVarName('HR_CLIENT_PATH')} = "${clientPath}"\n`
+        : ''
+    )
   )
 }
 
