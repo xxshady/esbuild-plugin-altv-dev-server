@@ -4,7 +4,7 @@
 
 [![youtube](http://img.youtube.com/vi/M70sMF3eXN0/0.jpg)](http://www.youtube.com/watch?v=M70sMF3eXN0)
 
-This tool allows you to this plugin allows you to see code changes immediately (hot reload) without reconnecting and restarting the server 
+This this lugin allows you to see code changes immediately (hot reload) without reconnecting and restarting the server 
 (to restart manually, you can use [server restart command](https://docs.altv.mp/articles/commandlineargs.html#server-commands))
 
 ## Installation
