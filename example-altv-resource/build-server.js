@@ -9,11 +9,11 @@ build({
   format: 'esm',
   entryPoints: ['./server-src/main.ts'],
   outfile: './server-dist.js',
-  // plugins: [
-  //   altvServerDev({
-  //     hotReload: {
-  //       clientPath: './client-dist.js'
-  //     },
-  //   }),
-  // ],
+  plugins: [
+    altvServerDev({
+      hotReload: {
+        clientPath: './client-dist.js'
+      },
+    }),
+  ],
 })
