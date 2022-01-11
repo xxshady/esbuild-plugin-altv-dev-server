@@ -19,13 +19,13 @@ const altvServerDev = (options = {}) => ({
   setup (build) {
     const {
       hotReload = false,
-      handleStartupErrors = !!hotReload,
       reconnectPlayers = !!hotReload,
+      handleStartupErrors = false,
     } = options
 
     log('hotReload:', hotReload)
-    log('handleStartupErrors:', handleStartupErrors)
     log('reconnectPlayers:', reconnectPlayers)
+    log('handleStartupErrors:', handleStartupErrors)
 
     let {
       initialOptions: {
