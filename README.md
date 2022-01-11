@@ -43,13 +43,17 @@ esbuild.build({
       // (see example usage in example resource)
       // hotReload: { clientPath: './client-dist.js' }
       
-      // these options are enabled automatically with hotReload and can be omitted:
-
+      // this option enabled automatically with hotReload and can be omitted:
       // enables auto emulation of players reconnect to the server
       // with some delay after resource start (default 200ms)
       // (for e.g. you need to wait until your database is loaded or any other async stuff)
+      // default = hotReload
       reconnectPlayers: boolean | { delay: number (ms) },
+      
       // Handles exceptions during the resource startup "[Error] Failed to load resource <name>"
+      // default: false
+      // Warning! this option can lead to syntax errors if you build your code in "esm" format 
+      // (because all code is wrapped in try catch and import-statements cause these errors)
       handleStartupErrors: boolean
     })]
     : [],
