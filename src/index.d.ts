@@ -9,8 +9,17 @@ export interface IHotReload {
 }
 
 export interface IOptions {
+  /**
+   * default is `false`
+   */
   hotReload?: boolean | IHotReload
+  /**
+   * default is `false`
+   */
   handleStartupErrors?: boolean
+  /**
+   * default value is dynamic and equivalent to `hotReload` option
+   */
   reconnectPlayers?: boolean | IReconnectPlayers
 }
 
