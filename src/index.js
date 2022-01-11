@@ -50,38 +50,31 @@ const altvServerDev = (options = {}) => ({
       if (outdir) {
         const [entry] = entryPoints
 
-        if (entry.startsWith('./')) {
-          outfileName = entry.slice(2)
-        } else {
-          outfileName = entry
+        let fileName = formatPath(entry)
+        const lastSlashIdx = fileName.lastIndexOf('/')
+
+        if (lastSlashIdx !== -1) {
+          fileName = fileName.slice(lastSlashIdx + 1)
         }
+
+        outfileName = `${formatPath(outdir)}/${fileName}`
       } else {
-        if (outfile.startsWith('./')) {
-          outfileName = outfile.slice(2)
-        } else {
-          outfileName = outfile
-        }
+        outfileName = formatPath(outfile)
       }
+
+      outfileName = replaceTsExtension(outfileName)
 
       // log('outfileName:', outfileName)
 
       const cwd = replaceStringChar(process.cwd(), '\\', '/')
-
       const bundlePath = `${cwd}/${outfileName}`
       // log('bundlePath:', bundlePath)
 
       let clientFullPath = null
 
       if (clientPath) {
-        clientFullPath = `${cwd}/`
-
-        if (clientPath.startsWith('./')) {
-          clientFullPath += clientPath.slice(2)
-        } else if (clientPath.startsWith('/')) {
-          clientFullPath += clientPath.slice(1)
-        } else {
-          clientFullPath += clientPath
-        }
+        clientFullPath = `${cwd}/${formatPath(clientPath)}`
+        clientFullPath = replaceTsExtension(clientFullPath)
       }
 
       hotReloadCode = generateHotReloadCode(bundlePath, clientFullPath)
@@ -168,6 +161,26 @@ function replaceStringChar (str, char, replace) {
 
 function generateVarName (varName) {
   return `___${upperCasePluginName}_${varName}___`
+}
+
+function replaceTsExtension (fileName) {
+  if (fileName.slice(-3) === '.ts') {
+    fileName = fileName.slice(0, -3) + '.js'
+  }
+
+  return fileName
+}
+
+function formatPath (path) {
+  let finalPath
+
+  if (path.startsWith('./')) finalPath = path.slice(2)
+  else if (path.startsWith('/')) finalPath = path.slice(1)
+  else finalPath = path
+
+  if (path.endsWith('/')) finalPath = finalPath.slice(0, -1)
+
+  return finalPath
 }
 
 function log (...args) {
