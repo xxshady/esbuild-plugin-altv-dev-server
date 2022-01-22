@@ -216,17 +216,15 @@ import alt from 'alt-server'
 
     log(`start a timer for ~cl~${___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___}~w~ ms to reconnect players`)
 
-    const players = alt.Player.all
-
-    for (const p of players) {
-      p.dimension = defaultDimension
-      p.pos = initialPos
-      p.removeAllWeapons()
-      p.clearBloodDamage()
-    }
-
     alt.setTimeout(() => {
+      // temp fix of https://github.com/altmp/altv-js-module/issues/106
+      const players = alt.Player.all
+
       for (const p of players) {
+        p.dimension = defaultDimension
+        p.pos = initialPos
+        p.removeAllWeapons()
+        p.clearBloodDamage()
         alt.emit('playerConnect', p)
       }
     }, ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___)
