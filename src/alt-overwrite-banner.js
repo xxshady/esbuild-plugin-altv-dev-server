@@ -9,6 +9,7 @@ import alt from 'alt-server'
     caller: true,
     prototype: true,
   }
+  const pluginLogPrefix = '[esbuild-altv-dev]'
 
   const {
     BaseObject,
@@ -115,7 +116,7 @@ import alt from 'alt-server'
         this[originalDestroy]()
         // alt.log('destroyed baseobject:', BaseObjectChild.name)
       } catch (error) {
-        logError(`failed destroy alt.${BaseObjectChild.name} error:`)
+        logError(`failed to destroy alt.${BaseObjectChild.name} error:`)
         throw error
       }
     }
@@ -131,7 +132,7 @@ import alt from 'alt-server'
         return baseObject
         // alt.log('created baseobject:', BaseObjectChild.name)
       } catch (error) {
-        logError(`failed create alt.${BaseObjectChild.name} error:`)
+        logError(`failed to create alt.${BaseObjectChild.name} error:`)
         throw error
       }
     }
@@ -231,14 +232,12 @@ import alt from 'alt-server'
   }
 
   function logError (...args) {
-    alt.logError(
-      '[esbuild-altv-dev]',
-      'Please open issue on github of this plugin. \n',
-      ...(args[0].stack ? [args[0].stack] : args),
-    )
+    alt.logError(pluginLogPrefix, ...(args[0].stack ? [args[0].stack] : args))
+    alt.logError(pluginLogPrefix, '(If this error is not due to your code, open an issue:')
+    alt.logError(pluginLogPrefix, 'https://github.com/xxshady/esbuild-plugin-altv-dev-server/issues/new)', '\n')
   }
 
   function log (...args) {
-    alt.log('~lm~[esbuild-altv-dev]~w~', ...args)
+    alt.log(`~lm~${pluginLogPrefix}~w~`, ...args)
   }
 })()
