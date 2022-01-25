@@ -1,4 +1,5 @@
 import { readFileSync } from 'fs'
+import nodeBuiltinModules from './node-builtin-modules'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -7,6 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const bannerContent = readFileSync(join(__dirname, 'alt-overwrite-banner.js'))
 const consoleBlueColor = '\x1b[34m'
 const consoleResetColor = '\x1b[0m'
+const consoleRedColor = '\x1b[31m'
 const upperCasePluginName = replaceStringChar(pluginName, '-', '_').toUpperCase()
 const defaultReconnectPlayersDelay = 200
 
@@ -34,6 +36,7 @@ const altvServerDev = (options = {}) => ({
         outfile,
         entryPoints,
         outdir,
+        external,
       },
     } = build
 
@@ -41,6 +44,7 @@ const altvServerDev = (options = {}) => ({
     let startupErrorsHandlingBanner = ''
     let startupErrorsHandlingFooter = ''
     let reconnectPlayersBanner = ''
+    let externalsOnTopImports = ''
 
     if (hotReload) {
       const { clientPath = null } = hotReload
@@ -81,6 +85,13 @@ const altvServerDev = (options = {}) => ({
     }
 
     if (handleStartupErrors) {
+      const externalsOnTopNamespace = `${pluginName}-externals-on-top`
+      const { moveExternalsOnTop = true } = handleStartupErrors
+
+      /**
+       * @todo somehow improve this shit
+       */
+
       startupErrorsHandlingBanner = 'try {\n'
       startupErrorsHandlingFooter = (
         '\n' +
@@ -91,6 +102,77 @@ const altvServerDev = (options = {}) => ({
         '  })\n' +
         '}'
       )
+
+      if (moveExternalsOnTop) {
+        const altServerIdx = external.indexOf('alt-server')
+        if (altServerIdx !== '-1') external.splice(altServerIdx, 1)
+
+        const externalRegExpString = [...external, ...Object.keys(nodeBuiltinModules)].join('|')
+        const externalVarNames = {} // { [external original name]: external var name }
+
+        for (const externalName of external) {
+          if (externalName.includes('*')) {
+            const errorMessage = `external name: ${externalName} "*" wildcard character is not supported yet`
+
+            logError(errorMessage)
+            logError('(this error came from plugin option handleStartupErrors.moveExternalsOnTop,')
+            logError('that can be disabled if you are not using externals with enabled handleStartupErrors)')
+
+            throw new Error(errorMessage)
+          }
+
+          const externalVarName = generateVarName(`externalOnTop_${externalName}`)
+
+          externalVarNames[externalName] = externalVarName
+          externalsOnTopImports += `import * as ${externalVarName} from "${externalName}"\n`
+        }
+
+        // TODO implement builtin modules handling
+
+        // for (const name in nodeBuiltinModules) {
+        //   const externalVarName = generateVarName(`externalOnTop_${name}`)
+
+        //   externalVarNames[name] = externalVarName
+        //   externalsOnTopImports += `import * as ${externalVarName} from "${name}"\n`
+        // }
+
+        build.onResolve(
+          {
+            // eslint-disable-next-line prefer-regex-literals
+            filter: new RegExp(`^(${externalRegExpString})$`),
+          },
+          ({ path }) => {
+            const externalVarName = externalVarNames[path]
+
+            // TEST
+            log(`replace external import ${path}`)
+
+            if (!externalVarName) {
+              const errorMessage = `external: ${path} var name not found`
+
+              logError(errorMessage)
+              throw new Error(errorMessage)
+            }
+
+            return {
+              path: path,
+              namespace: externalsOnTopNamespace,
+              pluginData: externalVarName,
+            }
+          })
+
+        build.onLoad({ filter: /.*/, namespace: externalsOnTopNamespace },
+          ({ pluginData: externalVarName }) => {
+            return {
+              contents: (`
+              Object.defineProperty(exports, '__esModule', { value: true })
+              for (const key in ${externalVarName}) {
+                exports[key] = ${externalVarName}[key]
+              }
+            `),
+            }
+          })
+      }
     }
 
     if (reconnectPlayers) {
@@ -107,6 +189,8 @@ const altvServerDev = (options = {}) => ({
 
     const jsBanner = (
       '\n// --------------------- esbuild-plugin-altv-dev-server ---------------------\n' +
+      // imports first
+      externalsOnTopImports +
       hotReloadCode +
       reconnectPlayersBanner +
       bannerContent +
@@ -160,7 +244,7 @@ function replaceStringChar (str, char, replace) {
 }
 
 function generateVarName (varName) {
-  return `___${upperCasePluginName}_${varName}___`
+  return `___${upperCasePluginName}_${varName.replace(/[-/\\ ]/g, '_')}___`
 }
 
 function replaceTsExtension (fileName) {
@@ -185,6 +269,10 @@ function formatPath (path) {
 
 function log (...args) {
   console.log(`${consoleBlueColor}[${pluginName}]${consoleResetColor}`, ...args)
+}
+
+function logError (...args) {
+  console.log(`${consoleRedColor}[${pluginName}]`, ...args)
 }
 
 export default altvServerDev

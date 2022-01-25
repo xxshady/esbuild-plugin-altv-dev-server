@@ -1,0 +1,63 @@
+/* eslint-disable quote-props */
+/* eslint-disable key-spacing */
+
+/**
+ * taken from esbuild repository
+ * https://github.com/evanw/esbuild/blob/master/internal/resolver/resolver.go#L1915
+ * (BuiltInNodeModules)
+ */
+
+export default {
+  '_http_agent':         true,
+  '_http_client':        true,
+  '_http_common':        true,
+  '_http_incoming':      true,
+  '_http_outgoing':      true,
+  '_http_server':        true,
+  '_stream_duplex':      true,
+  '_stream_passthrough': true,
+  '_stream_readable':    true,
+  '_stream_transform':   true,
+  '_stream_wrap':        true,
+  '_stream_writable':    true,
+  '_tls_common':         true,
+  '_tls_wrap':           true,
+  'assert':              true,
+  'async_hooks':         true,
+  'buffer':              true,
+  'child_process':       true,
+  'cluster':             true,
+  'console':             true,
+  'constants':           true,
+  'crypto':              true,
+  'dgram':               true,
+  'domain':              true,
+  'events':              true,
+  'fs':                  true,
+  'fs/promises':         true,
+  'http':                true,
+  'http2':               true,
+  'https':               true,
+  'inspector':           true,
+  'module':              true,
+  'net':                 true,
+  'os':                  true,
+  'path':                true,
+  'perf_hooks':          true,
+  'process':             true,
+  'punycode':            true,
+  'querystring':         true,
+  'readline':            true,
+  'repl':                true,
+  'stream':              true,
+  'string_decoder':      true,
+  'timers':              true,
+  'tls':                 true,
+  'tty':                 true,
+  'url':                 true,
+  'util':                true,
+  'v8':                  true,
+  'vm':                  true,
+  'worker_threads':      true,
+  'zlib':                true,
+}

@@ -8,6 +8,13 @@ export interface IHotReload {
   clientPath: string
 }
 
+export interface IStartupErrorsHandling {
+  /**
+   * default is `true`
+   */
+  moveExternalsOnTop?: boolean
+}
+
 export interface IOptions {
   /**
    * default is `false`
@@ -16,7 +23,7 @@ export interface IOptions {
   /**
    * default is `false`
    */
-  handleStartupErrors?: boolean
+  handleStartupErrors?: boolean | IStartupErrorsHandling
   /**
    * default value is dynamic and equivalent to `hotReload` option
    */
