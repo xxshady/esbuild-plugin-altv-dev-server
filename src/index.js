@@ -105,11 +105,19 @@ const altvServerDev = (options = {}) => ({
 
       if (moveExternalsOnTop) {
         const altServerIdx = external.indexOf('alt-server')
-        if (altServerIdx !== '-1') external.splice(altServerIdx, 1)
+        if (altServerIdx !== -1) external.splice(altServerIdx, 1)
 
         const externalRegExpString = [...external, ...Object.keys(nodeBuiltinModules)].join('|')
         const externalVarNames = {} // { [external original name]: external var name }
 
+        const createRequireVarName = generateVarName('createRequire')
+        const customRequireVarName = generateVarName('customRequire')
+
+        externalsOnTopImports += '// ----------------- external on top imports START -----------------\n'
+        externalsOnTopImports += `import { createRequire as ${createRequireVarName} } from 'module'\n`
+
+        // saving custom module names in externalVarNames
+        // in order to import these modules at once, at the top of the bundle
         for (const externalName of external) {
           if (externalName.includes('*')) {
             const errorMessage = `external name: ${externalName} "*" wildcard character is not supported yet`
@@ -127,14 +135,15 @@ const altvServerDev = (options = {}) => ({
           externalsOnTopImports += `import * as ${externalVarName} from "${externalName}"\n`
         }
 
-        // TODO implement builtin modules handling
+        // saving nodejs built-in module names in externalVarNames
+        // to use require for importing them dynamically later
+        for (const name in nodeBuiltinModules) {
+          const externalVarName = generateVarName(`externalOnTop_${name}`)
+          externalVarNames[name] = externalVarName
+        }
 
-        // for (const name in nodeBuiltinModules) {
-        //   const externalVarName = generateVarName(`externalOnTop_${name}`)
-
-        //   externalVarNames[name] = externalVarName
-        //   externalsOnTopImports += `import * as ${externalVarName} from "${name}"\n`
-        // }
+        externalsOnTopImports += `const ${customRequireVarName} = ${createRequireVarName}(import.meta.url)\n`
+        externalsOnTopImports += '// ----------------- external on top imports END -----------------\n'
 
         build.onResolve(
           {
@@ -144,8 +153,7 @@ const altvServerDev = (options = {}) => ({
           ({ path }) => {
             const externalVarName = externalVarNames[path]
 
-            // TEST
-            log(`replace external import ${path}`)
+            // log(`resolve external import ${path}`)
 
             if (!externalVarName) {
               const errorMessage = `external: ${path} var name not found`
@@ -162,12 +170,21 @@ const altvServerDev = (options = {}) => ({
           })
 
         build.onLoad({ filter: /.*/, namespace: externalsOnTopNamespace },
-          ({ pluginData: externalVarName }) => {
+          ({ pluginData: externalVarName, path }) => {
             return {
               contents: (`
-              Object.defineProperty(exports, '__esModule', { value: true })
-              for (const key in ${externalVarName}) {
-                exports[key] = ${externalVarName}[key]
+              try {
+                module.exports = ${customRequireVarName}('${path}')
+              } catch (e) {
+                if (e.code !== 'ERR_REQUIRE_ESM') {
+                  try {
+                    alt.nextTick(() => alt.logError(e.stack))
+                  } catch {}
+                }
+                Object.defineProperty(exports, '__esModule', { value: true })
+                for (const key in ${externalVarName}) {
+                  exports[key] = ${externalVarName}[key]
+                }  
               }
             `),
             }

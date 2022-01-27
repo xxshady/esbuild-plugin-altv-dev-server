@@ -25,7 +25,7 @@ export interface IOptions {
    */
   handleStartupErrors?: boolean | IStartupErrorsHandling
   /**
-   * default value is dynamic and equivalent to `hotReload` option
+   * default value is dynamic and equivalent to `hotReload` (as boolean) option
    */
   reconnectPlayers?: boolean | IReconnectPlayers
 }
