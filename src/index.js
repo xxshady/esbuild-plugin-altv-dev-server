@@ -36,7 +36,7 @@ const altvServerDev = (options = {}) => ({
         outfile,
         entryPoints,
         outdir,
-        external,
+        external = [],
       },
     } = build
 
