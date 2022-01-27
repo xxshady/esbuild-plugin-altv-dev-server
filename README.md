@@ -40,17 +40,16 @@ esbuild.build({
     ? [altvDevServer({
       // enables auto restart of your resource,
       // emulation of reconnect players to the server (reconnectPlayers option) 
-      // and resource startup error handling (handleStartupErrors option)
       hotReload: boolean,
-      // use the client path so that the plugin can restart the resource when client code changes
+      // you can also specify the path to the client, so that the plugin can restart the resource when the client code changes
       // (see example usage in example resource)
-      // hotReload: { clientPath: './client-dist.js' }
+      // hotReload: { clientPath: string }
       
       // this option enabled automatically with hotReload and can be omitted:
       // enables auto emulation of players reconnect to the server
       // with some delay after resource start (default 200ms)
       // (for e.g. you need to wait until your database is loaded or any other async stuff)
-      // default = hotReload
+      // default = hotReload (as boolean)
       reconnectPlayers: boolean | { delay: number (ms) },
       
       // Handles exceptions during the resource startup "[Error] Failed to load resource <name>"
