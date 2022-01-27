@@ -3,8 +3,7 @@
   "version": "2.0.0",
   "main": "src/index.js",
   "files": [
-    "src/index.d.ts",
-    "src/alt-overwrite-banner.js"
+    "src/**/*"
   ],
   "license": "MIT",
   "peerDependencies": {
