@@ -22,7 +22,7 @@ const altvServerDev = (options = {}) => ({
     const {
       hotReload = false,
       reconnectPlayers = !!hotReload,
-      handleStartupErrors = false,
+      handleStartupErrors = !!hotReload,
     } = options
 
     log('hotReload:', hotReload)

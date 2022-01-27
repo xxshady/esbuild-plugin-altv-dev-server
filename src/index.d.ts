@@ -21,7 +21,7 @@ export interface IOptions {
    */
   hotReload?: boolean | IHotReload
   /**
-   * default is `false`
+   * default value is dynamic and equivalent to `hotReload` (as boolean) option
    */
   handleStartupErrors?: boolean | IStartupErrorsHandling
   /**
