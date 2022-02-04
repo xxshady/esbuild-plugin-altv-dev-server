@@ -7,9 +7,6 @@
 This plugin allows you to see code changes immediately (hot reload) without reconnecting and restarting the server 
 (to restart manually, you can use [server restart command](https://docs.altv.mp/articles/commandlineargs.html#server-commands))
 
-### ⚠Warning⚠
-At the moment hot reload will not work on the alt:V release branch (8.0), use rc [(9.0)](https://docs.altv.mp/articles/changelogs/9_0.html) branch before the rc->release [merge](https://docs.altv.mp/articles/changelogs/9_0.html) happens
-
 ## Installation
 
 ### Download the plugin
