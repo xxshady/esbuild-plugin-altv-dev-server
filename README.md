@@ -22,6 +22,8 @@ npm i -D esbuild-plugin-altv-dev-server
 
 ### Usage
 
+[Ready alt:V resource example](/example-altv-resource)
+
 ```js
 import altvDevServer from "esbuild-plugin-altv-dev-server"
 
