@@ -7,6 +7,9 @@
 This plugin allows you to see code changes immediately (hot reload) without reconnecting and restarting the server 
 (to restart manually, you can use [server restart command](https://docs.altv.mp/articles/commandlineargs.html#server-commands))
 
+## Caution
+If your script uses some events or other stuff that relay connect/disconnect information to the client, such as `"connectionComplete"`, `"disconnect"`, then you have to emulate their behavior in the dev environment yourself or replace them, e.g. `"disconnect"` can be replaced with `"resourceStop"`
+
 ## Installation
 
 ### Download the plugin
