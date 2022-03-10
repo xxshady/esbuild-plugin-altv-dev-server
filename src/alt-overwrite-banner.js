@@ -43,8 +43,6 @@ import alt from 'alt-server'
   }
 
   alt.on('resourceStop', () => {
-    // alt.log('resourceStop baseobjects:', baseObjects.size)
-
     for (const obj of baseObjects) {
       obj.destroy()
     }
@@ -54,6 +52,8 @@ import alt from 'alt-server'
 
   if (typeof ___ALTV_DEV_SERVER_HR_FS___ !== 'undefined') initHotReload()
   if (typeof ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ !== 'undefined') initReconnectPlayers()
+
+  initPlayerPrototypeTempFix()
 
   function overwritePlayerMetaMethods (Player) {
     const proto = Player.prototype
@@ -218,7 +218,6 @@ import alt from 'alt-server'
     log(`start a timer for ~cl~${___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___}~w~ ms to reconnect players`)
 
     alt.setTimeout(() => {
-      // temp fix of https://github.com/altmp/altv-js-module/issues/106
       const players = alt.Player.all
 
       for (const p of players) {
@@ -229,6 +228,23 @@ import alt from 'alt-server'
         alt.emit('playerConnect', p)
       }
     }, ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___)
+  }
+
+  /**
+   * a temp fix for alt:V prototype bug https://github.com/altmp/altv-js-module/issues/106
+   */
+  function initPlayerPrototypeTempFix () {
+    const players = []
+
+    alt.Player.all = players
+
+    alt.on('playerConnect', (player) => {
+      players.push(player)
+    })
+
+    alt.on('playerDisconnect', (player) => {
+      players.splice(players.indexOf(player), 1)
+    })
   }
 
   function logError (...args) {
