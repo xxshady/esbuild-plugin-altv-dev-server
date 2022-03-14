@@ -24,6 +24,7 @@ import alt from 'alt-server'
 
   const baseObjects = new Set()
   const clearPlayersMeta = overwritePlayerMetaMethods(Player)
+  const clearAltMeta = overwriteAltMetaMethods()
 
   for (const key in alt) {
     const baseObjectClass = alt[key]
@@ -48,6 +49,7 @@ import alt from 'alt-server'
     }
 
     clearPlayersMeta()
+    clearAltMeta()
   })
 
   if (typeof ___ALTV_DEV_SERVER_HR_FS___ !== 'undefined') initHotReload()
@@ -55,6 +57,7 @@ import alt from 'alt-server'
 
   initPlayerPrototypeTempFix()
 
+  // TODO delete meta handling for better clearing in resource stop
   function overwritePlayerMetaMethods (Player) {
     const proto = Player.prototype
 
@@ -245,6 +248,34 @@ import alt from 'alt-server'
     alt.on('playerDisconnect', (player) => {
       players.splice(players.indexOf(player), 1)
     })
+  }
+
+  // TODO delete meta handling for better clearing in resource stop
+  function overwriteAltMetaMethods () {
+    const metaStoreKey = Symbol('metaStoreKey')
+    const syncedMetaStoreKey = Symbol('syncedMetaStoreKey')
+
+    const originalSetMeta = Symbol('originalSetMeta')
+    const originalSetSyncedMeta = Symbol('originalSetSyncedMeta')
+
+    alt[originalSetMeta] = alt.setMeta
+    alt[originalSetSyncedMeta] = alt.setSyncedMeta
+
+    const defineMetaSetter = (originalMethodKey, storeKey) =>
+      function (key, value) {
+        alt[originalMethodKey](key, value)
+
+        alt[storeKey] = alt[storeKey] || {}
+        alt[storeKey][key] = value
+      }
+
+    alt.setMeta = defineMetaSetter(originalSetMeta, metaStoreKey)
+    alt.setSyncedMeta = defineMetaSetter(originalSetSyncedMeta, syncedMetaStoreKey)
+
+    return () => {
+      for (const key in alt[metaStoreKey]) alt.deleteMeta(key)
+      for (const key in alt[syncedMetaStoreKey]) alt.deleteSyncedMeta(key)
+    }
   }
 
   function logError (...args) {
