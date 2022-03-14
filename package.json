@@ -10,8 +10,8 @@
     "esbuild": "0.x"
   },
   "devDependencies": {
-    "@altv/types-server": "^2.0.6",
-    "@altv/types-shared": "^1.0.7",
+    "@altv/types-server": "^2.2.8",
+    "@altv/types-shared": "^1.2.1",
     "babel-eslint": "^10.1.0",
     "esbuild": "^0.13.8",
     "eslint": "^7.22.0",
