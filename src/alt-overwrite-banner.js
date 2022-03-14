@@ -10,6 +10,8 @@ import alt from 'alt-server'
     prototype: true,
   }
   const pluginLogPrefix = '[esbuild-altv-dev]'
+  const pluginMetaPrefix = '___ALTV_DEV_SERVER'
+  const connectedPlayerIds = `${pluginMetaPrefix}_CONNECTED_PLAYER_IDS`
 
   const {
     BaseObject,
@@ -20,6 +22,8 @@ import alt from 'alt-server'
     Player,
     resourceName,
     defaultDimension,
+    setMeta: setAltMeta,
+    getMeta: getAltMeta,
   } = alt
 
   const baseObjects = new Set()
@@ -220,20 +224,27 @@ import alt from 'alt-server'
   }
 
   function initReconnectPlayers () {
-    const resourceRestartedKey = `___ALTV_DEV_SERVER_${resourceName}_RESTARTED___`
+    const resourceRestartedKey = `${pluginMetaPrefix}_${resourceName}_RESTARTED___`
     const initialPos = { x: 0, y: 0, z: 72 }
 
-    if (!alt.getMeta(resourceRestartedKey)) {
-      alt.setMeta(resourceRestartedKey, true)
+    if (!getAltMeta(resourceRestartedKey)) {
+      setAltMeta(resourceRestartedKey, true)
       return
     }
 
-    log(`start a timer for ~cl~${___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___}~w~ ms to reconnect players`)
+    /**
+     * a temp fix for alt:V prototype bug https://github.com/altmp/altv-js-module/issues/106
+     */
+    const playerIds = getAltMeta(connectedPlayerIds)
+    if (!playerIds?.length) return
+
+    log(`start a timer for ~cl~${___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___}~w~ ms to reconnect players (${playerIds.length})`)
 
     alt.setTimeout(() => {
-      const players = alt.Player.all
+      for (const id of playerIds) {
+        const p = alt.Player.getByID(id)
+        if (!p) continue
 
-      for (const p of players) {
         p.dimension = defaultDimension
         p.pos = initialPos
         p.removeAllWeapons()
@@ -251,12 +262,22 @@ import alt from 'alt-server'
 
     alt.Player.all = players
 
+    const updateMeta = () => setAltMeta(
+      connectedPlayerIds,
+      players.map(p => p.id),
+    )
+
     alt.on('playerConnect', (player) => {
       players.push(player)
+      updateMeta()
     })
 
     alt.on('playerDisconnect', (player) => {
-      players.splice(players.indexOf(player), 1)
+      const idx = players.indexOf(player)
+      if (idx === -1) return
+
+      players.splice(idx, 1)
+      updateMeta()
     })
   }
 
