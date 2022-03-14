@@ -94,14 +94,12 @@ import alt from 'alt-server'
     proto.setLocalMeta = defineMetaSetter(originalSetLocalMeta, localMetaStoreKey)
 
     return () => {
-      alt.log('clearing player meta...')
       const players = alt.Player.all
 
       for (let i = 0; i < players.length; i++) {
         const player = players[i]
 
         for (const key in player[metaStoreKey]) {
-          // alt.log('deleteMeta', key)
           player.deleteMeta(key)
         }
 
@@ -146,7 +144,6 @@ import alt from 'alt-server'
         baseObject.__proto__ = this.__proto__
 
         return baseObject
-        // alt.log('created baseobject:', BaseObjectChild.name)
       } catch (error) {
         logError(`failed to create alt.${BaseObjectChild.name} error:`)
         throw error
