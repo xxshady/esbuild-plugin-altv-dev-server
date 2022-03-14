@@ -58,20 +58,27 @@ import alt from 'alt-server'
   initPlayerPrototypeTempFix()
 
   // TODO delete meta handling for better clearing in resource stop
+  /**
+   *
+   * @param {typeof alt.Player} Player
+   */
   function overwritePlayerMetaMethods (Player) {
     const proto = Player.prototype
 
     const metaStoreKey = Symbol('metaStoreKey')
     const syncedMetaStoreKey = Symbol('syncedMetaStoreKey')
     const streamSyncedMetaStoreKey = Symbol('streamSyncedMetaStoreKey')
+    const localMetaStoreKey = Symbol('localMetaStoreKey')
 
     const originalSetMeta = Symbol('originalSetMeta')
     const originalSetSyncedMeta = Symbol('originalSetSyncedMeta')
     const originalSetStreamSyncedMeta = Symbol('originalSetStreamSyncedMeta')
+    const originalSetLocalMeta = Symbol('originalSetLocalMeta')
 
     proto[originalSetMeta] = proto.setMeta
     proto[originalSetSyncedMeta] = proto.setSyncedMeta
     proto[originalSetStreamSyncedMeta] = proto.setStreamSyncedMeta
+    proto[originalSetLocalMeta] = proto.setLocalMeta
 
     const defineMetaSetter = (originalMethodKey, storeKey) =>
       function (key, value) {
@@ -84,8 +91,10 @@ import alt from 'alt-server'
     proto.setMeta = defineMetaSetter(originalSetMeta, metaStoreKey)
     proto.setSyncedMeta = defineMetaSetter(originalSetSyncedMeta, syncedMetaStoreKey)
     proto.setStreamSyncedMeta = defineMetaSetter(originalSetStreamSyncedMeta, streamSyncedMetaStoreKey)
+    proto.setLocalMeta = defineMetaSetter(originalSetLocalMeta, localMetaStoreKey)
 
     return () => {
+      alt.log('clearing player meta...')
       const players = alt.Player.all
 
       for (let i = 0; i < players.length; i++) {
@@ -102,6 +111,10 @@ import alt from 'alt-server'
 
         for (const key in player[streamSyncedMetaStoreKey]) {
           player.deleteStreamSyncedMeta(key)
+        }
+
+        for (const key in player[localMetaStoreKey]) {
+          player.deleteLocalMeta(key)
         }
       }
     }
