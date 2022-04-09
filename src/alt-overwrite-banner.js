@@ -1,4 +1,3 @@
-/* global ___ALTV_DEV_SERVER_HR_FS___ ___ALTV_DEV_SERVER_HR_BUNDLE_PATH___ ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ ___ALTV_DEV_SERVER_HR_CLIENT_PATH___ */
 import alt from 'alt-server'
 
 (() => {
@@ -58,6 +57,7 @@ import alt from 'alt-server'
 
   if (typeof ___ALTV_DEV_SERVER_HR_FS___ !== 'undefined') initHotReload()
   if (typeof ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ !== 'undefined') initReconnectPlayers()
+  if (typeof ___ALTV_DEV_SERVER_RES_COMMAND_NAME___ !== 'undefined') initResCommand(___ALTV_DEV_SERVER_RES_COMMAND_NAME___)
 
   initPlayerPrototypeTempFix()
 
@@ -198,15 +198,15 @@ import alt from 'alt-server'
     const MIN_FILE_CHANGE_MS = 200
     let lastBundleChange = 0
 
-    ___ALTV_DEV_SERVER_HR_FS___.watch(___ALTV_DEV_SERVER_HR_BUNDLE_PATH___, (...args) => {
+    ___ALTV_DEV_SERVER_HR_FS___.watch(___ALTV_DEV_SERVER_HR_BUNDLE_PATH___, () => {
       const now = +new Date()
       const elapsed = (now - lastBundleChange)
 
       if (elapsed < MIN_FILE_CHANGE_MS) return
       lastBundleChange = now
 
-      log(`~cl~[hot-reload]~w~ restarting ~gl~${resourceName}~w~ resource...`)
-      alt.restartResource(resourceName)
+      log(`~cl~[hot-reload]~w~ restarting ~gl~${resourceName}~w~ resource`)
+      restartResource()
     })
 
     if (typeof ___ALTV_DEV_SERVER_HR_CLIENT_PATH___ === 'string') {
@@ -217,8 +217,8 @@ import alt from 'alt-server'
         if (elapsed < MIN_FILE_CHANGE_MS) return
         lastBundleChange = now
 
-        log(`~cl~[hot-reload]~w~ restarting ~gl~${resourceName}~w~ resource... (client change)`)
-        alt.restartResource(resourceName)
+        log(`~cl~[hot-reload]~w~ restarting ~gl~${resourceName}~w~ resource (client change)`)
+        restartResource()
       })
     }
   }
@@ -281,6 +281,20 @@ import alt from 'alt-server'
     })
   }
 
+  function initResCommand (commandName) {
+    const reconnectPlayersLog = typeof ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ !== 'undefined'
+      ? ' and reconnect players'
+      : ''
+
+    const commandLog = `~cl~[res]~w~ restarting ~gl~${resourceName}~w~ resource${reconnectPlayersLog}`
+
+    alt.on('consoleCommand', (command) => {
+      if (command !== commandName) return
+      log(commandLog)
+      restartResource()
+    })
+  }
+
   // TODO delete meta handling for better clearing in resource stop
   function overwriteAltMetaMethods () {
     const metaStoreKey = Symbol('metaStoreKey')
@@ -307,6 +321,11 @@ import alt from 'alt-server'
       for (const key in alt[metaStoreKey]) alt.deleteMeta(key)
       for (const key in alt[syncedMetaStoreKey]) alt.deleteSyncedMeta(key)
     }
+  }
+
+  // TODO: add handling of "clientReady" client event
+  function restartResource () {
+    alt.restartResource(resourceName)
   }
 
   function logError (...args) {

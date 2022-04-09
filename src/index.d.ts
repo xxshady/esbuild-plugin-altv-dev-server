@@ -17,17 +17,22 @@ export interface IStartupErrorsHandling {
 
 export interface IOptions {
   /**
-   * default is `false`
+   * Default is `false`
    */
   hotReload?: boolean | IHotReload
   /**
-   * default value is dynamic and equivalent to `hotReload` (as boolean) option
+   * Default value is dynamic and equivalent to `hotReload` (as boolean) option
    */
   handleStartupErrors?: boolean | IStartupErrorsHandling
   /**
-   * default value is dynamic and equivalent to `hotReload` (as boolean) option
+   * Default value is dynamic and equivalent to `hotReload` (as boolean) option
    */
   reconnectPlayers?: boolean | IReconnectPlayers
+  
+  /**
+   * Default is `true`. Adds command "res" (for manual restart) to server console  (client soon)
+   */
+  resCommand?: boolean
 }
 
 declare function altvServerDev (options?: IOptions): Plugin

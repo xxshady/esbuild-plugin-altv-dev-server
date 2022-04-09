@@ -23,11 +23,13 @@ const altvServerDev = (options = {}) => ({
       hotReload = false,
       reconnectPlayers = !!hotReload,
       handleStartupErrors = !!hotReload,
+      resCommand = true,
     } = options
 
     log('hotReload:', hotReload)
     log('reconnectPlayers:', reconnectPlayers)
     log('handleStartupErrors:', handleStartupErrors)
+    log('resCommand:', resCommand)
 
     let {
       initialOptions: {
@@ -45,6 +47,7 @@ const altvServerDev = (options = {}) => ({
     let startupErrorsHandlingFooter = ''
     let reconnectPlayersBanner = ''
     let externalsOnTopImports = ''
+    let resCommandBanner = ''
 
     if (hotReload) {
       const { clientPath = null } = hotReload
@@ -204,13 +207,24 @@ const altvServerDev = (options = {}) => ({
       reconnectPlayersBanner = `const ${generateVarName('RECONNECT_PLAYERS_DELAY')} = ${delay}\n`
     }
 
+    if (resCommand) {
+      resCommandBanner += `const ${generateVarName('RES_COMMAND_NAME')} = 'res'\n`
+    }
+
     const jsBanner = (
       '\n// --------------------- esbuild-plugin-altv-dev-server ---------------------\n' +
+
+      // ---------- top ----------
       // imports first
       externalsOnTopImports +
       hotReloadCode +
       reconnectPlayersBanner +
+      resCommandBanner +
+      // ---------- top ----------
+
       bannerContent +
+
+      // ---------- bottom ----------
       startupErrorsHandlingBanner +
       '\n// --------------------- esbuild-plugin-altv-dev-server ---------------------\n'
     )
