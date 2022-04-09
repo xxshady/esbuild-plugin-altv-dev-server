@@ -8,6 +8,9 @@ This plugin allows you to see code changes immediately (hot reload) without reco
 (to restart manually, you can use [server restart command](https://docs.altv.mp/articles/commandlineargs.html#server-commands))
 
 ## Client-side caution
+
+Client-side is not currently fully supported at the moment, see issue #10
+
 If your client-side script uses some events or other stuff that relay connect/disconnect information to the client, such as `"connectionComplete"`, `"disconnect"`, then you have to emulate their behavior in the dev environment yourself or replace them, e.g. `"disconnect"` can be replaced with `"resourceStop"`
 
 ## Installation
