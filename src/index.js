@@ -299,10 +299,12 @@ function formatPath (path) {
 }
 
 function log (...args) {
+  // eslint-disable-next-line no-restricted-syntax
   console.log(`${consoleBlueColor}[${pluginName}]${consoleResetColor}`, ...args)
 }
 
 function logError (...args) {
+  // eslint-disable-next-line no-restricted-syntax
   console.log(`${consoleRedColor}[${pluginName}]`, ...args)
 }
 

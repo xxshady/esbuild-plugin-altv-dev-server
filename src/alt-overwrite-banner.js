@@ -23,6 +23,12 @@ import alt from 'alt-server'
     defaultDimension,
     setMeta: setAltMeta,
     getMeta: getAltMeta,
+    on: onAlt,
+    once: onceAlt,
+    onClient: onAltClient,
+    onceClient: onceAltClient,
+    off: offAlt,
+    offClient: offAltClient,
   } = alt
 
   const baseObjects = new Set()
@@ -33,6 +39,8 @@ import alt from 'alt-server'
     const baseObjectClass = alt[key]
     const proto = baseObjectClass.prototype
 
+    // TODO: maybe check if class is abstract
+    // by trying to call constructor of it and catch exception
     if (!(
       proto instanceof BaseObject &&
       baseObjectClass !== BaseObject &&
@@ -46,20 +54,14 @@ import alt from 'alt-server'
     alt[key] = wrapBaseObjectChildClass(baseObjectClass)
   }
 
-  alt.on('resourceStop', () => {
-    for (const obj of baseObjects) {
-      obj.destroy()
-    }
-
-    clearPlayersMeta()
-    clearAltMeta()
-  })
+  devOnAlt('resourceStop', onResourceStop)
 
   if (typeof ___ALTV_DEV_SERVER_HR_FS___ !== 'undefined') initHotReload()
   if (typeof ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ !== 'undefined') initReconnectPlayers()
   if (typeof ___ALTV_DEV_SERVER_RES_COMMAND_NAME___ !== 'undefined') initResCommand(___ALTV_DEV_SERVER_RES_COMMAND_NAME___)
 
   initPlayerPrototypeTempFix()
+  overwriteAltEventMethods()
 
   // TODO delete meta handling for better clearing in resource stop
   /**
@@ -267,12 +269,12 @@ import alt from 'alt-server'
       players.map(p => p.id),
     )
 
-    alt.on('playerConnect', (player) => {
+    devOnAlt('playerConnect', (player) => {
       players.push(player)
       updateMeta()
     })
 
-    alt.on('playerDisconnect', (player) => {
+    devOnAlt('playerDisconnect', (player) => {
       const idx = players.indexOf(player)
       if (idx === -1) return
 
@@ -288,7 +290,7 @@ import alt from 'alt-server'
 
     const commandLog = `~cl~[res]~w~ restarting ~gl~${resourceName}~w~ resource${reconnectPlayersLog}`
 
-    alt.on('consoleCommand', (command) => {
+    devOnAlt('consoleCommand', (command) => {
       if (command !== commandName) return
       log(commandLog)
       restartResource()
@@ -323,9 +325,76 @@ import alt from 'alt-server'
     }
   }
 
+  function overwriteAltEventMethods () {
+    /** @type {Record<string, Set<(...args: any[]) => any>} */
+    const localListeners = {}
+    /** @type {Record<string, Set<(...args: any[]) => any>} */
+    const remoteListeners = {}
+
+    const addLocalListener = (event, handler) => {
+      const listeners = localListeners[event] ?? new Set()
+      listeners.add(handler)
+      localListeners[event] = listeners
+    }
+
+    const addRemoteListener = (event, handler) => {
+      const listeners = remoteListeners[event] ?? new Set()
+      listeners.add(handler)
+      remoteListeners[event] = listeners
+    }
+
+    // why? idk why i wrote this pain
+
+    alt.on = (event, handler) => {
+      onAlt(event, handler)
+      addLocalListener(event, handler)
+    }
+
+    alt.once = (event, handler) => {
+      onceAlt(event, handler)
+      addLocalListener(event, handler)
+    }
+
+    alt.onClient = (event, handler) => {
+      onAltClient(event, handler)
+      addRemoteListener(event, handler)
+    }
+
+    alt.onceClient = (event, handler) => {
+      onceAltClient(event, handler)
+      addRemoteListener(event, handler)
+    }
+
+    alt.off = (event, handler) => {
+      offAlt(event, handler)
+      localListeners[event]?.delete(handler)
+    }
+
+    alt.offClient = (event, handler) => {
+      offAltClient(event, handler)
+      remoteListeners[event]?.delete(handler)
+    }
+
+    alt.getEventListeners = (event) => {
+      const listeners = localListeners[event] ?? new Set()
+      return [...listeners]
+    }
+
+    alt.getRemoteEventListeners = (event) => {
+      const listeners = remoteListeners[event] ?? new Set()
+      return [...listeners]
+    }
+  }
+
   // TODO: add handling of "clientReady" client event
   function restartResource () {
     alt.restartResource(resourceName)
+  }
+
+  function onResourceStop () {
+    for (const obj of baseObjects) obj.destroy()
+    clearPlayersMeta()
+    clearAltMeta()
   }
 
   function logError (...args) {
@@ -335,6 +404,21 @@ import alt from 'alt-server'
   }
 
   function log (...args) {
+    // eslint-disable-next-line no-restricted-syntax
     alt.log(`~lm~${pluginLogPrefix}~w~`, ...args)
   }
+
+  function devOnAlt (event, handler) {
+    onAlt(event, handler)
+  }
+
+  // TODO
+  // function devAltOnce () {}
+
+  // function devOnAltClient (event, handler) {
+  //   onAltClient(event, handler)
+  // }
+
+  // TODO
+  // function devAltOnceClient () {}
 })()
