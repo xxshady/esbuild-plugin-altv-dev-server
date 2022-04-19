@@ -41,22 +41,22 @@ import alt from 'alt-server'
   const clearAltMeta = overwriteAltMetaMethods()
 
   for (const key in alt) {
-    const baseObjectClass = alt[key]
-    const proto = baseObjectClass.prototype
+    const BaseObjectClass = alt[key]
+    const proto = BaseObjectClass.prototype
 
-    // TODO: maybe check if class is abstract
-    // by trying to call constructor of it and catch exception
-    if (!(
-      proto instanceof BaseObject &&
-      baseObjectClass !== BaseObject &&
-      baseObjectClass !== WorldObject &&
-      baseObjectClass !== Entity &&
-      baseObjectClass !== Blip &&
-      baseObjectClass !== Colshape &&
-      baseObjectClass !== Player
-    )) continue
+    if (!(proto instanceof BaseObject)) continue
 
-    alt[key] = wrapBaseObjectChildClass(baseObjectClass)
+    let isClassAbstract = false
+    try {
+      new BaseObjectClass()
+      // this shit works by altv js module bug
+      isClassAbstract = true
+    } catch (e) {
+      if (e?.message?.includes('abstract')) isClassAbstract = true
+    }
+    if (isClassAbstract) continue
+
+    alt[key] = wrapBaseObjectChildClass(BaseObjectClass)
   }
 
   devOnAlt('resourceStop', onResourceStop)
