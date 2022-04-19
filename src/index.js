@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs'
+import { readFileSync, writeFileSync } from 'fs'
 import nodeBuiltinModules from './node-builtin-modules'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
@@ -44,13 +44,19 @@ const altvServerDev = (options = {}) => ({
 
     let hotReloadCode = ''
     let startupErrorsHandlingBanner = ''
-    let startupErrorsHandlingFooter = ''
     let reconnectPlayersBanner = ''
     let externalsOnTopImports = ''
     let resCommandBanner = ''
+    let serverBundleValidationBanner = ''
+
+    let startupErrorsHandlingFooter = ''
 
     if (hotReload) {
-      const { clientPath = null } = hotReload
+      const {
+        clientPath = null,
+        // TODO remove experimental option description and change default to true
+        serverBundleValidation = false,
+      } = hotReload
 
       let outfileName
 
@@ -74,8 +80,8 @@ const altvServerDev = (options = {}) => ({
       // log('outfileName:', outfileName)
 
       const cwd = replaceStringChar(process.cwd(), '\\', '/')
-      const bundlePath = `${cwd}/${outfileName}`
-      // log('bundlePath:', bundlePath)
+      const serverBundlePath = `${cwd}/${outfileName}`
+      // log('serverBundlePath:', serverBundlePath)
 
       let clientFullPath = null
 
@@ -84,7 +90,24 @@ const altvServerDev = (options = {}) => ({
         clientFullPath = replaceTsExtension(clientFullPath)
       }
 
-      hotReloadCode = generateHotReloadCode(bundlePath, clientFullPath)
+      hotReloadCode = generateHotReloadCode(serverBundlePath, clientFullPath)
+
+      if (serverBundleValidation) {
+        const serverBundleEndString = '// esbuild-plugin-altv-dev-server-end'
+        serverBundleValidationBanner += `const ${generateVarName('SERVER_END_BUNDLE_STRING')} = '${serverBundleEndString}'\n`
+
+        build.onEnd((result) => {
+          if (result.errors.length > 0) return
+
+          // log('[serverBundleValidation] write end comment')
+
+          writeFileSync(
+            serverBundlePath,
+            `\n${serverBundleEndString}\n`,
+            { flag: 'a+' },
+          )
+        })
+      }
     }
 
     if (handleStartupErrors) {
@@ -220,6 +243,7 @@ const altvServerDev = (options = {}) => ({
       hotReloadCode +
       reconnectPlayersBanner +
       resCommandBanner +
+      serverBundleValidationBanner +
       // ---------- top ----------
 
       bannerContent +

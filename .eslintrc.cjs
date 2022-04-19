@@ -70,6 +70,7 @@ module.exports = {
         message: 'Use devOnAltceServer',
       },
     ],
+    'no-eval': 0,
   },
   globals: {
     ___ALTV_DEV_SERVER_HR_FS___: 'readonly',
@@ -77,6 +78,7 @@ module.exports = {
     ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___: 'readonly',
     ___ALTV_DEV_SERVER_HR_CLIENT_PATH___: 'readonly',
     ___ALTV_DEV_SERVER_RES_COMMAND_NAME___: 'readonly',
+    ___ALTV_DEV_SERVER_SERVER_END_BUNDLE_STRING___: 'readonly',
   },
   ignorePatterns: [
     '*.d.ts',

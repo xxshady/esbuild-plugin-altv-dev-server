@@ -1,6 +1,7 @@
 import alt from 'alt-server'
 
 (() => {
+  const fs = ___ALTV_DEV_SERVER_HR_FS___
   const defaultJSFuncProps = {
     length: true,
     name: true,
@@ -11,6 +12,10 @@ import alt from 'alt-server'
   const pluginLogPrefix = '[esbuild-altv-dev]'
   const pluginMetaPrefix = '___ALTV_DEV_SERVER'
   const connectedPlayerIds = `${pluginMetaPrefix}_CONNECTED_PLAYER_IDS`
+  const serverBundleValidEndComment =
+    typeof ___ALTV_DEV_SERVER_SERVER_END_BUNDLE_STRING___ !== 'undefined'
+      ? ___ALTV_DEV_SERVER_SERVER_END_BUNDLE_STRING___
+      : null
 
   const {
     BaseObject,
@@ -56,7 +61,7 @@ import alt from 'alt-server'
 
   devOnAlt('resourceStop', onResourceStop)
 
-  if (typeof ___ALTV_DEV_SERVER_HR_FS___ !== 'undefined') initHotReload()
+  if (typeof fs !== 'undefined') initHotReload()
   if (typeof ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ !== 'undefined') initReconnectPlayers()
   if (typeof ___ALTV_DEV_SERVER_RES_COMMAND_NAME___ !== 'undefined') initResCommand(___ALTV_DEV_SERVER_RES_COMMAND_NAME___)
 
@@ -199,30 +204,84 @@ import alt from 'alt-server'
   function initHotReload () {
     const MIN_FILE_CHANGE_MS = 200
     let lastBundleChange = 0
+    const AFTER_CHANGE_WAIT_MS = 100
+    let serverBundleTimer = null
+    let serverBundleResolved = false
 
-    ___ALTV_DEV_SERVER_HR_FS___.watch(___ALTV_DEV_SERVER_HR_BUNDLE_PATH___, () => {
+    /** @returns {boolean} */
+    const validateServerBundle = () => new Promise(resolve => {
+      if (serverBundleResolved) return resolve(false)
+      if (serverBundleTimer) {
+        // log('~cl~[server-bundle-validation] ~y~reset timer')
+
+        serverBundleTimer.resolve?.(false)
+        if (serverBundleTimer.timer) clearTimeout(serverBundleTimer.timer)
+        serverBundleTimer = null
+      }
+
+      const checkEndString = () => {
+        // log('~cl~[server-bundle-validation] ~y~checkEndString')
+        if (!serverBundleTimer) return
+
+        try {
+          const serverBundleContent = fs.readFileSync(___ALTV_DEV_SERVER_HR_BUNDLE_PATH___)?.toString()
+          const bundleEnd = serverBundleContent.slice(-serverBundleValidEndComment.length + (-10))
+
+          // log('~cl~[server-bundle-validation]~w~ bundle end: ~cl~', bundleEnd)
+
+          if (bundleEnd.includes(serverBundleValidEndComment)) {
+            log('~cl~[server-bundle-validation] ~gl~everything is fine')
+          } else {
+            log('~cl~[server-bundle-validation]~w~ wait for server bundle again')
+            // eslint-disable-next-line no-use-before-define
+            serverBundleTimer.timer = setTimeout(checkEndString, AFTER_CHANGE_WAIT_MS)
+            return
+          }
+        } catch (e) {
+          log('~rl~ read server bundle error:', e.stack)
+        }
+
+        serverBundleTimer = null
+        resolve(true)
+        serverBundleResolved = true
+      }
+
+      serverBundleTimer = {
+        resolve,
+        timer: null,
+      }
+
+      checkEndString()
+    })
+
+    const oldValidChange = () => {
       const now = +new Date()
       const elapsed = (now - lastBundleChange)
 
-      if (elapsed < MIN_FILE_CHANGE_MS) return
+      if (elapsed < MIN_FILE_CHANGE_MS) return false
       lastBundleChange = now
 
-      log(`~cl~[hot-reload]~w~ restarting ~gl~${resourceName}~w~ resource`)
-      restartResource()
-    })
+      return true
+    }
 
-    if (typeof ___ALTV_DEV_SERVER_HR_CLIENT_PATH___ === 'string') {
-      ___ALTV_DEV_SERVER_HR_FS___.watch(___ALTV_DEV_SERVER_HR_CLIENT_PATH___, () => {
-        const now = +new Date()
-        const elapsed = (now - lastBundleChange)
+    const validateChange = serverBundleValidEndComment
+      ? validateServerBundle
+      : oldValidChange
 
-        if (elapsed < MIN_FILE_CHANGE_MS) return
-        lastBundleChange = now
+    const watchSide = (side, path) => {
+      // log('watchSide', side, path, 'isItValidChange:', isItValidChange)
 
-        log(`~cl~[hot-reload]~w~ restarting ~gl~${resourceName}~w~ resource (client change)`)
+      fs.watch(path, async () => {
+        // log('watch change', side)
+        if (!await validateChange()) return
+
+        log(`~cl~[hot-reload]~w~ restarting ~gl~${resourceName}~w~ resource (${side} change)`)
         restartResource()
       })
     }
+
+    watchSide('server', ___ALTV_DEV_SERVER_HR_BUNDLE_PATH___)
+    watchSide('client', ___ALTV_DEV_SERVER_HR_CLIENT_PATH___)
   }
 
   function initReconnectPlayers () {
@@ -388,8 +447,11 @@ import alt from 'alt-server'
 
   // TODO: add handling of "clientReady" client event
   function restartResource () {
+    if (restartResource.called) return
+    restartResource.called = true
     alt.restartResource(resourceName)
   }
+  restartResource.called = false
 
   function onResourceStop () {
     for (const obj of baseObjects) obj.destroy()

@@ -6,6 +6,15 @@ export interface IReconnectPlayers {
 
 export interface IHotReload {
   clientPath: string
+  /**
+   * ! EXPERIMENTAL !
+   * 
+   * It makes sure that server bundle is finally built 
+   * and only then starts resource restart
+   * 
+   * default is `false`
+   */
+  serverBundleValidation?: boolean
 }
 
 export interface IStartupErrorsHandling {
@@ -30,7 +39,9 @@ export interface IOptions {
   reconnectPlayers?: boolean | IReconnectPlayers
   
   /**
-   * Default is `true`. Adds command "res" (for manual restart) to server console  (client soon)
+   * Adds command "res" (for manual restart) to server console  (client soon).
+   * 
+   * Default is `true`
    */
   resCommand?: boolean
 }
