@@ -38,9 +38,11 @@ import alt from 'alt-server'
 
   for (const key in alt) {
     const BaseObjectClass = alt[key]
-    const proto = BaseObjectClass.prototype
-
-    if (!(proto instanceof BaseObject)) continue
+    if (
+      !(BaseObjectClass.prototype instanceof BaseObject) ||
+      // Player class is bugged, see function initPlayerPrototypeTempFix
+      BaseObjectClass === Player
+    ) continue
 
     let isClassAbstract = false
     try {
