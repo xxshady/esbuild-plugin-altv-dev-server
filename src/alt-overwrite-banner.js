@@ -19,10 +19,6 @@ import alt from 'alt-server'
 
   const {
     BaseObject,
-    WorldObject,
-    Entity,
-    Blip,
-    Colshape,
     Player,
     resourceName,
     defaultDimension,
