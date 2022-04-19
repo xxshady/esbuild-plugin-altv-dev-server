@@ -220,7 +220,6 @@ import alt from 'alt-server'
       }
 
       const checkEndString = () => {
-        // log('~cl~[server-bundle-validation] ~y~checkEndString')
         if (!serverBundleTimer) return
 
         try {
@@ -233,7 +232,6 @@ import alt from 'alt-server'
             log('~cl~[server-bundle-validation] ~gl~everything is fine')
           } else {
             log('~cl~[server-bundle-validation]~w~ wait for server bundle again')
-            // eslint-disable-next-line no-use-before-define
             serverBundleTimer.timer = setTimeout(checkEndString, AFTER_CHANGE_WAIT_MS)
             return
           }
@@ -269,10 +267,7 @@ import alt from 'alt-server'
       : oldValidChange
 
     const watchSide = (side, path) => {
-      // log('watchSide', side, path, 'isItValidChange:', isItValidChange)
-
       fs.watch(path, async () => {
-        // log('watch change', side)
         if (!await validateChange()) return
 
         log(`~cl~[hot-reload]~w~ restarting ~gl~${resourceName}~w~ resource (${side} change)`)
