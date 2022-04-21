@@ -107,6 +107,7 @@ import alt from 'alt-server'
 
       for (let i = 0; i < players.length; i++) {
         const player = players[i]
+        if (!player.valid) continue // idk how is that possible here
 
         for (const key in player[metaStoreKey]) {
           player.deleteMeta(key)
