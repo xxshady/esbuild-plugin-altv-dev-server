@@ -310,7 +310,7 @@ import alt from 'alt-server'
         p.collision = true
         p.invincible = false
         p.visible = true
-        // p.frozen = false // frozen setter is broken
+        p.frozen = false
 
         alt.emit('playerConnect', p)
       }
