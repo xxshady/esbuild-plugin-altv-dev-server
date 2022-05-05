@@ -59,8 +59,12 @@ import alt from 'alt-server'
 
   devOnAlt('resourceStop', onResourceStop)
 
+  let despawnPlayers = () => {}
+
   if (typeof fs !== 'undefined') initHotReload()
-  if (typeof ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ !== 'undefined') initReconnectPlayers()
+  if (typeof ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ !== 'undefined') {
+    despawnPlayers = initReconnectPlayers()
+  }
   if (typeof ___ALTV_DEV_SERVER_RES_COMMAND_NAME___ !== 'undefined') initResCommand(___ALTV_DEV_SERVER_RES_COMMAND_NAME___)
 
   initPlayerPrototypeTempFix()
@@ -284,14 +288,14 @@ import alt from 'alt-server'
 
     if (!getAltMeta(resourceRestartedKey)) {
       setAltMeta(resourceRestartedKey, true)
-      return
+      return despawnPlayers
     }
 
     /**
      * a temp fix for alt:V prototype bug https://github.com/altmp/altv-js-module/issues/106
      */
     const playerIds = getAltMeta(connectedPlayerIds)
-    if (!playerIds?.length) return
+    if (!playerIds?.length) return despawnPlayers
 
     log(`start a timer for ~cl~${___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___}~w~ ms to reconnect players (${playerIds.length})`)
 
@@ -302,11 +306,29 @@ import alt from 'alt-server'
 
         p.dimension = defaultDimension
         p.pos = initialPos
-        p.removeAllWeapons()
-        p.clearBloodDamage()
+        p.streamed = true
+        p.collision = true
+        p.invincible = false
+        p.visible = true
+        // p.frozen = false // frozen setter is broken
+
         alt.emit('playerConnect', p)
       }
     }, ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___)
+
+    return despawnPlayers
+
+    function despawnPlayers () {
+      log('despawn players')
+
+      for (const p of alt.Player.all) {
+        p.removeAllWeapons()
+        p.clearBloodDamage()
+        // despawn doesnt call detach now (see alt:V issue https://github.com/altmp/altv-issues/issues/1456)
+        p.detach()
+        p.despawn()
+      }
+    }
   }
 
   /**
@@ -451,6 +473,7 @@ import alt from 'alt-server'
     for (const obj of baseObjects) obj.destroy()
     clearPlayersMeta()
     clearAltMeta()
+    despawnPlayers()
   }
 
   function logError (...args) {
