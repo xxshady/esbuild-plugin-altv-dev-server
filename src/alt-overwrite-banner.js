@@ -310,7 +310,9 @@ import alt from 'alt-server'
         p.collision = true
         p.invincible = false
         p.visible = true
-        p.frozen = false
+
+        // frozen setter is broken now, see alt:V issue https://github.com/altmp/altv-issues/issues/1462
+        // p.frozen = false
 
         alt.emit('playerConnect', p)
       }
