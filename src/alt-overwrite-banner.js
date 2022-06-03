@@ -1,22 +1,6 @@
 import alt from 'alt-server'
 
 (() => {
-  const fs = ___ALTV_DEV_SERVER_HR_FS___
-  const defaultJSFuncProps = {
-    length: true,
-    name: true,
-    arguments: true,
-    caller: true,
-    prototype: true,
-  }
-  const pluginLogPrefix = '[esbuild-altv-dev]'
-  const pluginMetaPrefix = '___ALTV_DEV_SERVER'
-  const connectedPlayerIds = `${pluginMetaPrefix}_CONNECTED_PLAYER_IDS`
-  const serverBundleValidEndComment =
-    typeof ___ALTV_DEV_SERVER_SERVER_END_BUNDLE_STRING___ !== 'undefined'
-      ? ___ALTV_DEV_SERVER_SERVER_END_BUNDLE_STRING___
-      : null
-
   const {
     BaseObject,
     Player,
@@ -31,6 +15,22 @@ import alt from 'alt-server'
     off: offAlt,
     offClient: offAltClient,
   } = alt
+  const fs = ___ALTV_DEV_SERVER_HR_FS___
+  const defaultJSFuncProps = {
+    length: true,
+    name: true,
+    arguments: true,
+    caller: true,
+    prototype: true,
+  }
+  const pluginLogPrefix = '[esbuild-altv-dev]'
+  const pluginMetaPrefix = '___ALTV_DEV_SERVER'
+  const serverBundleValidEndComment =
+    typeof ___ALTV_DEV_SERVER_SERVER_END_BUNDLE_STRING___ !== 'undefined'
+      ? ___ALTV_DEV_SERVER_SERVER_END_BUNDLE_STRING___
+      : null
+  const resourceRestartedKey = `${pluginMetaPrefix}_${resourceName}_RESTARTED___`
+  const isItFirstResoureStart = !getAltMeta(resourceRestartedKey)
 
   const baseObjects = new Set()
   const clearPlayersMeta = overwritePlayerMetaMethods(Player)
@@ -61,13 +61,16 @@ import alt from 'alt-server'
 
   let despawnPlayers = () => {}
 
+  initPlayerPrototypeTempFix()
+
   if (typeof fs !== 'undefined') initHotReload()
   if (typeof ___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___ !== 'undefined') {
     despawnPlayers = initReconnectPlayers()
   }
-  if (typeof ___ALTV_DEV_SERVER_RES_COMMAND_NAME___ !== 'undefined') initResCommand(___ALTV_DEV_SERVER_RES_COMMAND_NAME___)
+  if (typeof ___ALTV_DEV_SERVER_RES_COMMAND_NAME___ !== 'undefined') {
+    initResCommand(___ALTV_DEV_SERVER_RES_COMMAND_NAME___)
+  }
 
-  initPlayerPrototypeTempFix()
   overwriteAltEventMethods()
 
   // TODO delete meta handling for better clearing in resource stop
@@ -142,7 +145,6 @@ import alt from 'alt-server'
       try {
         baseObjects.delete(this)
         this[originalDestroy]()
-        // alt.log('destroyed baseobject:', BaseObjectChild.name)
       } catch (error) {
         logError(`failed to destroy alt.${BaseObjectChild.name} error:`)
         throw error
@@ -177,7 +179,6 @@ import alt from 'alt-server'
         if (defaultJSFuncProps[key]) continue
 
         try {
-          // alt.log(`wrapping class: ${BaseObjectChild.name} key: ${key}`)
           const { value, set } = Object.getOwnPropertyDescriptor(BaseObjectChild, key)
 
           // static method
@@ -215,8 +216,6 @@ import alt from 'alt-server'
     const validateServerBundle = () => new Promise(resolve => {
       if (serverBundleResolved) return resolve(false)
       if (serverBundleTimer) {
-        // log('~cl~[server-bundle-validation] ~y~reset timer')
-
         serverBundleTimer.resolve?.(false)
         if (serverBundleTimer.timer) clearTimeout(serverBundleTimer.timer)
         serverBundleTimer = null
@@ -228,8 +227,6 @@ import alt from 'alt-server'
         try {
           const serverBundleContent = fs.readFileSync(___ALTV_DEV_SERVER_HR_BUNDLE_PATH___)?.toString()
           const bundleEnd = serverBundleContent.slice(-serverBundleValidEndComment.length + (-10))
-
-          // log('~cl~[server-bundle-validation]~w~ bundle end: ~cl~', bundleEnd)
 
           if (bundleEnd.includes(serverBundleValidEndComment)) {
             log('~cl~[server-bundle-validation] ~gl~everything is fine')
@@ -283,27 +280,19 @@ import alt from 'alt-server'
   }
 
   function initReconnectPlayers () {
-    const resourceRestartedKey = `${pluginMetaPrefix}_${resourceName}_RESTARTED___`
     const initialPos = { x: 0, y: 0, z: 72 }
 
-    if (!getAltMeta(resourceRestartedKey)) {
+    if (isItFirstResoureStart) {
       setAltMeta(resourceRestartedKey, true)
       return despawnPlayers
     }
 
-    /**
-     * a temp fix for alt:V prototype bug https://github.com/altmp/altv-js-module/issues/106
-     */
-    const playerIds = getAltMeta(connectedPlayerIds)
-    if (!playerIds?.length) return despawnPlayers
+    const players = alt.Player.all
 
-    log(`start a timer for ~cl~${___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___}~w~ ms to reconnect players (${playerIds.length})`)
+    log(`start a timer for ~cl~${___ALTV_DEV_SERVER_RECONNECT_PLAYERS_DELAY___}~w~ ms to reconnect players (${players.length})`)
 
     alt.setTimeout(() => {
-      for (const id of playerIds) {
-        const p = alt.Player.getByID(id)
-        if (!p) continue
-
+      for (const p of players) {
         p.dimension = defaultDimension
         p.pos = initialPos
         p.streamed = true
@@ -337,27 +326,20 @@ import alt from 'alt-server'
    * a temp fix for alt:V prototype bug https://github.com/altmp/altv-js-module/issues/106
    */
   function initPlayerPrototypeTempFix () {
-    const players = []
-
-    alt.Player.all = players
-
-    const updateMeta = () => setAltMeta(
-      connectedPlayerIds,
-      players.map(p => p.id),
-    )
+    // fix prototype of players objects in alt.Player.all after restart as close to resource start as possible
+    alt.nextTick(() => {
+      for (const player of alt.Player.all) {
+        fixPlayerObjectPrototype(player)
+      }
+    })
 
     devOnAlt('playerConnect', (player) => {
-      players.push(player)
-      updateMeta()
+      fixPlayerObjectPrototype(player)
     })
+  }
 
-    devOnAlt('playerDisconnect', (player) => {
-      const idx = players.indexOf(player)
-      if (idx === -1) return
-
-      players.splice(idx, 1)
-      updateMeta()
-    })
+  function fixPlayerObjectPrototype (player) {
+    player.__proto__ = alt.Player.prototype
   }
 
   function initResCommand (commandName) {
