@@ -1,3 +1,6 @@
+# ⛔️ DEPRECATED
+This plugin is now deprecated. Now there's a better version [altv-esbuild](https://github.com/xxshady/altv-esbuild)
+
 # esbuild-plugin-altv-dev-server
 
 [esbuild](https://esbuild.github.io/) plugin for extremely fast development using JS/TS on [alt:V](https://altv.mp)
